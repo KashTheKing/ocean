@@ -1,0 +1,13 @@
+{
+	"name": "Ocean",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"$ignoreUnknownInstances": true,
+			"Ocean": {
+				"$path": "src/Ocean"
+			}
+		}
+	}
+}

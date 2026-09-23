@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <title>Ocean</title>
+  <!-- cresting wave -->
+  <path d="M4 40 C12 40 15 30 24 24 C33 18 45 20 49 29 C51.5 35 47 40.5 41.5 39 C37 37.8 36.5 32 40.5 30.5 C34 28.5 28 33 27.5 40 C36 46 50 45 60 40"
+        stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- swell lines -->
+  <path d="M6 50 C12 46 18 46 24 50 C30 54 36 54 42 50 C48 46 54 46 58 49"
+        stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  <path d="M14 58 C19 55 24 55 29 58 C34 61 39 61 44 58"
+        stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+</svg>
