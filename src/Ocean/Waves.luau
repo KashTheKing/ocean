@@ -84,8 +84,13 @@ local function buildSet(name: string): Set
 	return set
 end
 
+local flat = false -- FlatSea: no displacement anywhere, the surface is SeaLevel
+local frozen = false -- StaticWaves: the wave clock holds, so the surface never moves
+
 function Waves.Refresh()
 	Weather.Decode()
+	flat = Settings.Get("FlatSea") == true
+	frozen = Settings.Get("StaticWaves") == true
 	table.clear(Waves.Sets)
 	Waves.MaxLength = 1
 	for _, name in Weather.Names() do
@@ -108,16 +113,15 @@ function Waves.Refresh()
 end
 
 ---------------------------------------------------------------------------------------------
--- Obstacles: tag a BasePart or Model "OceanObstacle" and the sea goes idle against it instead
--- of washing through. Each is a disc in XZ (its bounding circle); waves fade from full at
--- `OceanShore` studs out (attribute, default 40) to nothing inside. Same function on both sides,
--- so floats and swimmers calm down at the shore too.
--- Discs, refreshed twice a second. Good for islands, piers and slow ships; a long thin
--- breakwater gets a circle around it. Add an oriented-box branch if that ever matters.
+-- Obstacles: tag a BasePart or Model "OceanObstacle" and the sea calms against it instead of
+-- washing through. Each is its box's footprint in XZ, grown by `OceanShore` studs (attribute,
+-- default 40): inside that outset the water is calmed by OceanCalmness (attribute, 0..1: 1 = flat,
+-- 0 = the waves pass untouched), and over the next Shore studs the waves ease back to full. Same
+-- function on both sides, so floats and swimmers calm down at the shore too. Refreshed twice a second.
 ---------------------------------------------------------------------------------------------
 
 local DEFAULT_SHORE = 40
-local obstacles = {} :: { any } -- { X, Z, Radius, Shore }
+local obstacles = {} :: { any } -- { X, Z, Radius, Shore, Calmness, CFrame, HalfX, HalfZ }
 local obstacleTimer = 0
 
 function Waves.RefreshObstacles()
@@ -139,11 +143,17 @@ function Waves.RefreshObstacles()
 		local ex = math.abs(right.X) * size.X + math.abs(cframe.UpVector.X) * size.Y + math.abs(look.X) * size.Z
 		local ez = math.abs(right.Z) * size.X + math.abs(cframe.UpVector.Z) * size.Y + math.abs(look.Z) * size.Z
 		local shore = instance:GetAttribute("OceanShore")
+		local calmness = instance:GetAttribute("OceanCalmness")
 		table.insert(obstacles, {
 			X = cframe.Position.X,
 			Z = cframe.Position.Z,
-			Radius = math.sqrt(ex * ex + ez * ez) / 2,
+			Radius = math.sqrt(ex * ex + ez * ez) / 2, -- bounding circle, for the near-lists only
 			Shore = math.max(if typeof(shore) == "number" then shore else DEFAULT_SHORE, 1),
+			-- 1 = flat against it, 0 = the waves pass this obstacle untouched
+			Calmness = math.clamp(if typeof(calmness) == "number" then calmness else 1, 0, 1),
+			CFrame = cframe,
+			HalfX = size.X / 2,
+			HalfZ = size.Z / 2,
 		})
 	end
 end
@@ -164,18 +174,20 @@ function Waves.ObstaclesNear(x: number?, z: number?, radius: number?): { any }
 	return near
 end
 
--- 1 = open water, 0 = inside an obstacle; smooth in between across the shore ring.
+-- 1 = open water, 1 - OceanCalmness = against the obstacle; a gentle (quintic) fade across the shore
+-- ring in between, so the sea settles into the shore instead of going flat at a line.
 function Waves.Damp(list: { any }, x: number, z: number): number
 	local factor = 1
 	for _, o in list do
-		local dx, dz = x - o.X, z - o.Z
-		local d = math.sqrt(dx * dx + dz * dz) - o.Radius
-		if d < o.Shore then
-			local s = math.clamp(d / o.Shore, 0, 1)
-			factor = math.min(factor, s * s * (3 - 2 * s))
-			if factor <= 0 then
-				break
-			end
+		-- signed distance to the box footprint: positive outside, negative inside
+		local l = o.CFrame:PointToObjectSpace(Vector3.new(x, o.CFrame.Position.Y, z))
+		local ox, oz = math.abs(l.X) - o.HalfX, math.abs(l.Z) - o.HalfZ
+		local d = if ox > 0 or oz > 0 then math.sqrt(math.max(ox, 0) ^ 2 + math.max(oz, 0) ^ 2) else math.max(ox, oz)
+		-- fully calmed out to Shore studs beyond the edge, then the waves come back over another Shore
+		if d < 2 * o.Shore then
+			local s = math.clamp((d - o.Shore) / o.Shore, 0, 1)
+			local ease = s * s * s * (s * (6 * s - 15) + 10)
+			factor = math.min(factor, 1 - o.Calmness * (1 - ease))
 		end
 	end
 	return factor
@@ -189,7 +201,7 @@ local function tickObstacles(dt: number)
 	end
 end
 
-local connections: { RBXScriptConnection } = {}
+local connections: { any } = {}
 
 function Waves.Init()
 	Waves.Refresh()
@@ -208,6 +220,9 @@ end
 
 -- Synced wave clock. (Weather fades use unscaled server time.)
 function Waves.Time(): number
+	if frozen then
+		return 0
+	end
 	return workspace:GetServerTimeNow() * timeScale
 end
 
@@ -237,6 +252,9 @@ end
 local function push(count: number, blend: any, weight: number, now: number): number
 	local alpha = Weather.Alpha(blend, now)
 	local sets, weights = Waves.LayerSets, Waves.LayerWeights
+	if not Waves.Sets[Weather.DEFAULT] then
+		Waves.Refresh() -- asked before Init (a script requiring the module early): compile now
+	end
 	local current = Waves.Sets[blend.Current] or Waves.Sets[Weather.DEFAULT]
 	if alpha < 1 then
 		count += 1
@@ -288,6 +306,9 @@ end
 
 -- Displacement of the rest-position surface point (x, z).
 function Waves.Displace(x: number, z: number, t: number?, now: number?): (number, number, number)
+	if flat then
+		return 0, 0, 0
+	end
 	local clock = now or workspace:GetServerTimeNow()
 	local time = t or clock * timeScale
 	local count = Waves.Gather(zones, x, z, clock)

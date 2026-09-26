@@ -76,7 +76,10 @@ function Weather.Resolve(name: string): { [string]: any }
 	for _, entry in Settings.List do
 		if entry.Weather then
 			local value = overrides[entry.Name]
-			if value == nil then
+			local forced = Settings.LocalOverride(entry.Name) -- this client's zone look wins everywhere
+			if forced ~= nil then
+				value = forced
+			elseif value == nil then
 				value = Settings.Get(entry.Name)
 			elseif typeof(entry.Default) == "Color3" then
 				value = Color3.new(value[1], value[2], value[3])

@@ -1,6 +1,6 @@
 --[[
 	Dry regions: tag a BasePart or Model "OceanDry" and there is no water inside it - the surface
-	mesh drops out of the box, the underwater tint stays off for a camera inside it, characters don't
+	mesh sinks under the box, the underwater tint stays off for a camera inside it, characters don't
 	swim in it and the water events treat it as air. Submarine interiors, underwater rooms, diving bells.
 
 	Shared by both sides (visuals, swim, events, buoyancy, the IsUnderWater API). A float inside a
@@ -129,23 +129,15 @@ function Regions.CoversXZ(box: Box, x: number, z: number, margin: number?): bool
 	return math.abs(l.X) <= box.Half.X + m and math.abs(l.Z) <= box.Half.Z + m
 end
 
--- If (x, z) is inside the footprint, push it out to the nearest wall; within `corner` studs of two
--- walls it goes to the corner itself (so grid triangles across a corner collapse to a line).
--- Returns x, z, wasInside.
-function Regions.PushOut(box: Box, x: number, z: number, corner: number?): (number, number, boolean)
+-- If (x, z) is inside the footprint, push it out to the nearest wall. Returns x, z, wasInside.
+function Regions.PushOut(box: Box, x: number, z: number): (number, number, boolean)
 	local cf, h = box.CFrame, box.Half
 	local l = cf:PointToObjectSpace(Vector3.new(x, cf.Position.Y, z))
 	if math.abs(l.X) > h.X or math.abs(l.Z) > h.Z then
 		return x, z, false
 	end
-	local toX = h.X - math.abs(l.X)
-	local toZ = h.Z - math.abs(l.Z)
 	local lx, lz = l.X, l.Z
-	local snap = corner or 0
-	if toX <= snap and toZ <= snap then
-		lx = if l.X < 0 then -h.X else h.X
-		lz = if l.Z < 0 then -h.Z else h.Z
-	elseif toX < toZ then
+	if h.X - math.abs(l.X) < h.Z - math.abs(l.Z) then
 		lx = if l.X < 0 then -h.X else h.X
 	else
 		lz = if l.Z < 0 then -h.Z else h.Z

@@ -1,4 +1,7 @@
 --[[
+	Infinite Ocean module. Copyright (c) 2026 KashTheKing. MIT licence (LICENSE): modify and
+	distribute freely, keep this notice. Support and feedback: @KashTheKing (Roblox, Discord, YouTube, X).
+
 	Ocean: infinite EditableMesh Gerstner ocean, synced server/client. Just the ocean - no lighting,
 	no weather effects. It exposes a weather API so other systems can drive the sea state.
 
@@ -6,7 +9,7 @@
 		Ocean.Init()   -- once on the server and once on each client (OceanServer/OceanClient do this)
 
 	Weather (server only; replicates, and server physics + client visuals stay in step):
-		Ocean:CreateWeather("Storm", Ocean.Presets.Storm)   -- a named set of setting overrides
+		Ocean:CreateWeather("Rough", Ocean.Presets.Ocean["Pirate Seas"])   -- a named set of setting overrides
 		Ocean:SetWeather("Storm", 20)                       -- whole ocean, cross-faded over 20 s
 		Ocean:CreateZone("Bay", { Position = Vector3.new(0, 0, 2000), Radius = 800, Weather = "Calm" })
 		Ocean:SetZoneWeather("Bay", "Storm", 10)
@@ -18,14 +21,18 @@
 
 	Settings are attributes on this ModuleScript (defaults in Ocean.Settings); the server owns them.
 	Tags (CollectionService - add them from scripts, the plugin, or the Tag Editor):
-		OceanFloat     unanchored BasePart floats (OceanBuoyancy / OceanDrag attributes tune it)
-		OceanObstacle  part/model the sea goes idle against (OceanShore attribute = ring width)
+		OceanFloat     unanchored BasePart floats via the Buoyancy addon (OceanBuoyancy / OceanDrag tune it)
+		OceanObstacle  part/model the sea calms against (OceanShore = ring width, OceanCalmness 0..1)
 		OceanDry       part/model with no water inside: submarine interiors, underwater rooms
 		OceanTrack     just get water events for it
 	Events (Ocean.EnteredWater / ExitedWater / WentUnderWater / WentAboveWater, each (instance)) fire
 	for tagged instances and player characters. Queries: GetWaterHeight, GetDepth, IsUnderWater,
 	IsAboveWater, IsDry, GetSurfaceNormal, GetWaterState, IsInWater, GetInstancesInWater.
-	Characters swim automatically.
+	Zones: tag a part "OceanZone" and any setting set as an attribute on it overrides the module
+	inside it (its own sea and buoyancy). The plugin's Zones addon fills those from an Ocean
+	preset and handles entering / leaving (lighting). Ocean:GetZoneAt(position) -> name?,
+	Ocean:GetZones().
+	Characters swim via the plugin's Swimming addon (a separate script), not this module.
 ]]
 local RunService = game:GetService("RunService")
 
@@ -36,6 +43,7 @@ local Ocean = {
 	Presets = require(script.Presets),
 	Regions = require(script.Regions),
 	Tracker = require(script.Tracker),
+	Zones = require(script.Zones),
 }
 -- Ocean.Tags.Float / .Obstacle / .Dry / .Track: the current tag names (FloatTag etc. settings)
 Ocean.Tags = setmetatable({}, {
@@ -62,20 +70,10 @@ function Ocean.Init()
 	end
 	Ocean.Waves.Init()
 	Ocean.Regions.Init()
+	Ocean.Zones.Init()
 	Ocean.Tracker.Init()
-	require(script.Buoyancy).Init() -- runs on both sides; each side only pushes parts it simulates
-
-	if RunService:IsServer() and RunService:IsStudio() then
-		require(script.Debug).InitServer()
-	end
-
 	if RunService:IsClient() then
 		require(script.Renderer).Init()
-		require(script.Splash).Init()
-		require(script.Swim).Init()
-		if RunService:IsStudio() then
-			require(script.Debug).InitClient()
-		end
 	end
 end
 
@@ -190,6 +188,20 @@ function Ocean:Untrack(instance: Instance)
 	instance:RemoveTag(Ocean.Tags.Track)
 end
 
+-- Zones (tagged "OceanZone"): the one containing the point, all of them, the local player's.
+function Ocean:GetZoneAt(position: Vector3): string?
+	local zone = Ocean.Zones.At(position)
+	return if zone then zone.Name else nil
+end
+
+function Ocean:GetZones(): { string }
+	local names = {}
+	for _, zone in Ocean.Zones.List() do
+		table.insert(names, zone.Name)
+	end
+	return names
+end
+
 function Ocean:GetWeatherAt(position: Vector3): string
 	local waves = Ocean.Waves
 	local count = waves.Gather(waves.ZonesNear(), position.X, position.Z, workspace:GetServerTimeNow())
@@ -208,6 +220,7 @@ function Ocean.Preview(host: Instance, into: Instance)
 	Ocean.Settings.SetHost(host)
 	Ocean.Waves.Init()
 	Ocean.Regions.Init()
+	Ocean.Zones.Init()
 	require(script.Renderer).Init(into)
 end
 
@@ -215,6 +228,7 @@ function Ocean.StopPreview()
 	require(script.Renderer).Stop()
 	Ocean.Waves.Stop()
 	Ocean.Regions.Stop()
+	Ocean.Zones.Stop()
 end
 
 return Ocean

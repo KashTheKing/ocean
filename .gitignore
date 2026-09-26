@@ -1,5 +1,2 @@
-/.vscode
-/node_modules
-/build
+build/
 sourcemap.json
-globalTypes.d.luau

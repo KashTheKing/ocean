@@ -127,6 +127,10 @@ end
 function SurfaceTexture.Get(): Content
 	if not image then
 		local created = AssetService:CreateEditableImage({ Size = Vector2.one * SIZE })
+		if not created then -- the client's EditableImage budget is spent: plain white foam, no rings
+			warn("[Ocean] EditableImage memory budget reached: no animated foam texture")
+			return Content.none
+		end
 		image = created
 		generation += 1
 		task.spawn(bake, created, generation)
