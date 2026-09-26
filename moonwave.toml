@@ -21,6 +21,11 @@ src = "img/favicon.svg"
 alt = "Infinite Ocean"
 
 [[navbar.items]]
+href = "https://create.roblox.com/store/asset/76752250508724/Infinite-Ocean"
+label = "Get the plugin"
+position = "right"
+
+[[navbar.items]]
 href = "https://github.com/KashTheKing/ocean"
 label = "Module source"
 position = "right"
@@ -33,7 +38,8 @@ copyright = "Copyright © 2026 KashTheKing. Infinite Ocean module is MIT; the St
 title = "Docs"
 items = [
 	{ label = "Getting started", to = "/docs/intro" },
-	{ label = "Tutorial", to = "/docs/tutorial" },
+	{ label = "No Scripting Guide", to = "/docs/no-scripting" },
+	{ label = "Advanced Guide", to = "/docs/advanced" },
 	{ label = "Plugin guide", to = "/docs/plugin" },
 	{ label = "API reference", to = "/api/Ocean" },
 ]
@@ -41,6 +47,7 @@ items = [
 [[footer.links]]
 title = "Support"
 items = [
+	{ label = "Get the plugin", href = "https://create.roblox.com/store/asset/76752250508724/Infinite-Ocean" },
 	{ label = "Discord server", href = "https://discord.gg/6HYgCk22eD" },
 	{ label = "@KashTheKing on Roblox", href = "https://www.roblox.com/users/117445502/profile" },
 	{ label = "@KashTheKing on X", href = "https://x.com/KashTheKing" },

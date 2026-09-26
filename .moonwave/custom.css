@@ -153,3 +153,39 @@ table th {
 .api-function-name {
 	color: var(--ifm-color-primary-lighter);
 }
+
+/* Getting started: the two path cards */
+.ocean-paths {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 1rem;
+	margin: 1rem 0 2rem;
+}
+.ocean-path {
+	display: block;
+	padding: 1.2rem 1.4rem;
+	border-radius: 10px;
+	background: var(--ocean-card);
+	border: 1px solid var(--ocean-card-border);
+	color: var(--ifm-font-color-base);
+	text-decoration: none;
+	transition: border-color 0.15s, transform 0.15s;
+}
+.ocean-path:hover {
+	border-color: var(--ifm-color-primary);
+	text-decoration: none;
+	color: var(--ifm-font-color-base);
+	transform: translateY(-2px);
+}
+.ocean-path h3 {
+	margin: 0 0 0.4rem;
+	color: var(--ifm-color-primary-lighter);
+}
+.ocean-path p {
+	margin: 0 0 0.6rem;
+	color: var(--ocean-dim);
+}
+.ocean-path-cta {
+	font-weight: 600;
+	color: var(--ifm-color-primary);
+}

@@ -109,10 +109,31 @@ export default function Home() {
 					</p>
 				</section>
 				<section className={styles.gallery}>
-					<Shot src="/img/showcase-island.jpg" caption="Island preset: the default sea" />
-					<Shot src="/img/showcase-pirate-seas.jpg" caption="Pirate Seas preset: rough and stylized" />
-					<Shot src="/img/showcase-oil-rig.jpg" caption="Oil Rig preset: long realistic swell" />
+					<Shot src="/img/showcase-island.jpg" caption="Island preset under Golden Hour lighting" />
+					<Shot src="/img/showcase-cartoony.jpg" caption="Cartoony look, Sunny Day lighting" />
+					<Shot src="/img/showcase-stylized-golden.jpg" caption="Stylized look with solid foam at golden hour" />
+					<Shot src="/img/showcase-oil-rig.jpg" caption="Oil Rig preset: haze and long swell" />
+					<Shot src="/img/showcase-pirate-seas.jpg" caption="Pirate Seas preset, cliff side" />
+					<Shot src="/img/showcase-dark-lighthouse.jpg" caption="Dark Lighthouse lighting, Realistic look" />
 					<Shot src="/img/showcase-great-flood.jpg" caption="Great Flood preset: walls of water" />
+					<Shot src="/img/showcase-golden-hour.jpg" caption="Classic look, Golden Hour lighting" />
+				</section>
+				<section className={styles.cta}>
+					<h2>Ready to build your sea?</h2>
+					<p>
+						Pick the No Scripting Guide to have the plugin do it all, or the Advanced Guide to drive the sea from code.
+					</p>
+					<div className={styles.buttons}>
+						<Link className="button button--primary button--lg" to="/docs/intro">
+							Get started
+						</Link>
+						<Link
+							className="button button--outline button--lg"
+							href="https://create.roblox.com/store/asset/76752250508724/Infinite-Ocean"
+						>
+							Get the plugin
+						</Link>
+					</div>
 				</section>
 				<section className={styles.cta}>
 					<h2>Made by KashTheKing</h2>

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 10
 title: Presets
 ---
 
@@ -22,6 +22,8 @@ A whole sea: one physics, one look, plus the Lighting and Atmosphere that suit i
 ![Oil Rig](./img/showcase-oil-rig.jpg)
 
 ![Great Flood](./img/showcase-great-flood.jpg)
+
+![Pirate Seas from the west](./img/showcase-pirate-seas-west.jpg)
 
 ## Physics presets
 
@@ -46,7 +48,21 @@ The look only: colours, foam, film, spray, material and textures.
 | **Stylized** | Bright flat bands with solid white foam, no reflection. |
 | **Realistic** | Reflective, textured, detailed foam and film. |
 
+![Cartoony look](./img/showcase-cartoony-high.jpg)
+
+![Stylized look at golden hour](./img/showcase-stylized-golden.jpg)
+
 ![Blank](./img/showcase-blank.jpg)
+
+## Lighting looks
+
+The **Lighting and Atmosphere** section adds one-click lighting on top of any preset: Sunny Day, Golden Hour, Night Time, Foggy Void Sea and Dark Lighthouse. The same island, three of them:
+
+![Golden Hour](./img/showcase-golden-hour.jpg)
+
+![Dark Lighthouse](./img/showcase-dark-lighthouse.jpg)
+
+![Oil Rig haze from the east](./img/showcase-oil-rig-east.jpg)
 
 ## Your own
 
