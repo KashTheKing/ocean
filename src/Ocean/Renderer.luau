@@ -89,7 +89,7 @@ local UNDERWATER_GUI = "OceanUnderwater" -- the module's own full-screen tint fr
 local MAX_CELLS_PER_SIDE = 49
 local BEHIND_MARGIN = 48 -- studs behind the camera plane before a vertex counts as "behind"
 local BEHIND_EVERY = 4 -- behind-camera vertices update every Nth frame (they still exist for turns)
--- ponytail: bones cost ~0.7 us each per frame whether or not they moved, and past ~4k a mesh
+-- bones cost ~0.7 us each per frame whether or not they moved, and past ~4k a mesh
 -- gets pathological; the outermost animated vertices (long swells 400+ studs out) lose theirs first.
 local MAX_BONES = 2500
 local BLOCK = 32 -- lattice cells per tile side: the camera sits at a block corner, so the bone disc is 4 tiles
@@ -180,8 +180,7 @@ local foamDamp: { number? } = {} -- foam vertex -> obstacle damp, nil = open wat
 -- Re-evaluated on re-centre and every STATIC_REFRESH.
 local pinned: { { number }? } = {} -- vertex -> { dx, dz, y } world offset to the wall (0 when deep inside), sunk height
 -- Obstacle damping and "could a wave shove me into a dry box" depend only on the vertex's rest
--- position, so they are fields refreshed with the pins, not per frame (that was the frame cost of
--- every obstacle / dry region: a sqrt or a CFrame call per vertex per box per frame).
+-- position, so they are fields refreshed with the pins, not per frame.
 local dampOf: { number? } = {} -- vertex -> damp factor, nil = open water
 local nearDry: { boolean? } = {} -- vertex -> true when within shove reach of a dry box footprint
 local dryNear: { Regions.Box } = {} -- the boxes near the mesh, for those vertices
@@ -195,10 +194,12 @@ local tile = 32 -- studs per texture repeat: TILE_CELLS fine cells
 local snap = 32 -- studs the mesh re-centres by: the texture tile, so the textures stay put in the world
 -- Continuous LOD: the fade of each wave depends on distance from the TRUE camera position, via
 -- the grid's own spacing law spacing(d) = cell + (d - innerRadius) * (growth - 1) / growth, not on
--- which ring a vertex happens to sit in. Ring-based weights jumped every time the mesh re-centred,
--- which read as waves popping in/out while moving.
+-- which ring a vertex happens to sit in, so re-centring the mesh never changes a wave's weight.
 local lodCell, lodInner, lodSlope = 8, 0, 0
 local animatedRadius = 0
+-- The skin set is the nearest MAX_BONES lattice points, a disc; past its edge vertices rest flat on
+-- Root. Every wave fades to nothing over the outer part of that disc, so the edge never shows.
+local skinFade: { number } = {} -- vertex -> 0..1 multiplier on its displacement
 local seenVersion = -1
 local seenNight = -1
 
@@ -354,8 +355,10 @@ local function applyLook()
 end
 
 -- 1 by day, NightBrightness once the sun is down. The ocean only READS the sky; it never sets it.
+local Lighting = game:GetService("Lighting")
+
 local function nightFactor(): number
-	local sun = math.clamp((game:GetService("Lighting"):GetSunDirection().Y + 0.1) / 0.35, 0, 1)
+	local sun = math.clamp((Lighting:GetSunDirection().Y + 0.1) / 0.35, 0, 1)
 	local night = Settings.Get("NightBrightness")
 	return night + (1 - night) * sun * sun * (3 - 2 * sun)
 end
@@ -726,7 +729,7 @@ local function buildOnce(token: number)
 		end
 		return
 	end
-	-- the real positions, now that the 2048-stud creation cap is behind us
+	-- the real positions (SetPosition after creation is not bound by the 2048-stud creation cap)
 	for i, em in newTileMeshes do
 		if tileShrink[i] < 1 then
 			for k, L in tileVerts[i] do
@@ -827,6 +830,19 @@ local function buildOnce(token: number)
 			partOf[v], localOf[v], latticeOf[v] = newTileParts[i], k, L
 		end
 	end
+	local skinRadius = 0
+	for v = 1, #baseX do
+		if hasSkin[v] then
+			skinRadius = math.max(skinRadius, math.sqrt(baseX[v] * baseX[v] + baseZ[v] * baseZ[v]))
+		end
+	end
+	local fadeFrom = skinRadius * 0.7
+	table.clear(skinFade)
+	for v = 1, #baseX do
+		local d = math.sqrt(baseX[v] * baseX[v] + baseZ[v] * baseZ[v])
+		local t = math.clamp((d - fadeFrom) / math.max(skinRadius - fadeFrom, 1), 0, 1)
+		skinFade[v] = 1 - t * t * (3 - 2 * t)
+	end
 	gridN = n
 	applyLook()
 	table.clear(pinned)
@@ -919,7 +935,7 @@ local function refreshStatic(ox: number, oz: number)
 	for v = 1, #baseX do
 		if not inBox[latticeOf[v]] then
 			local wx, wz = ox + baseX[v], oz + baseZ[v]
-			local margin = 2 / (3 * invSpacing[v]) + 4 -- ponytail: cells, not the real shove bound
+			local margin = 2 / (3 * invSpacing[v]) + 4 -- cells, not the real shove bound
 			for _, box in dryNear do
 				if Regions.CoversXZ(box, wx, wz, margin) then
 					nearDry[v] = true
@@ -994,10 +1010,17 @@ local function applyTint(focus: Vector3)
 	local under = Settings.Get("UnderwaterEnabled")
 		and focus.Y < Waves.Height(focus.X, focus.Z)
 		and not Regions.IsDry(focus)
-	tint.Visible = under
+	if tint.Visible ~= under then
+		tint.Visible = under
+	end
 	if under then
-		tint.BackgroundColor3 = Settings.Get("UnderwaterTint")
-		tint.BackgroundTransparency = 1 - Settings.Get("UnderwaterOpacity")
+		local color, transparency = Settings.Get("UnderwaterTint"), 1 - Settings.Get("UnderwaterOpacity")
+		if tint.BackgroundColor3 ~= color then
+			tint.BackgroundColor3 = color
+		end
+		if tint.BackgroundTransparency ~= transparency then
+			tint.BackgroundTransparency = transparency
+		end
 	end
 end
 
@@ -1063,20 +1086,21 @@ end
 
 local function update()
 	local model, camera = container, workspace.CurrentCamera
-	if camera then
-		applyTint(camera.CFrame.Position)
-	end
-	if not (model and camera) then
+	if not camera then
 		return
 	end
-	-- The mesh moves at UpdateRate, not at the render rate: at 200 fps that is a third of the
-	-- bone traffic for the same-looking sea. Accumulator, so it averages out exactly.
+	-- The mesh (and the tint) update at UpdateRate, not at the render rate: at 200 fps that is a
+	-- third of the bone traffic for the same-looking sea. Accumulator, so it averages out exactly.
 	local started = os.clock()
 	if started < nextUpdate then
 		return
 	end
 	local period = 1 / Settings.Get("UpdateRate")
 	nextUpdate = math.max(nextUpdate + period, started - period)
+	applyTint(camera.CFrame.Position)
+	if not model then
+		return
+	end
 
 	if seenVersion ~= Waves.Version then
 		seenVersion = Waves.Version
@@ -1160,7 +1184,9 @@ local function update()
 	-- (staggering neighbours onto different frames shows as corrugation at grazing angles).
 	-- The mesh just re-centred: every vertex must be placed against the new origin THIS frame, or the
 	-- half-rate ring sits a tile off for a frame (the "chop" when moving fast).
-	for _, list in { near, if moved or frame % quality.FarEvery == 0 then far else NO_ZONES } do
+	local farPass = moved or frame % quality.FarEvery == 0
+	for pass = 1, if farPass then 2 else 1 do
+		local list: { number } = if pass == 1 then near else far
 		for _, v in list do
 			local lx, lz = baseX[v], baseZ[v]
 			local wx, wz = ox + lx, oz + lz
@@ -1173,6 +1199,10 @@ local function update()
 			local inv = 1 / (3 * (lodCell + math.max(math.sqrt(ddx * ddx + ddz * ddz) - lodInner, 0) * lodSlope))
 			gatherAt(wx, wz)
 			local dx, dy, dz = waveAt(wx, wz, inv, t)
+			local fade = skinFade[v]
+			if fade < 1 then
+				dx, dy, dz = dx * fade, dy * fade, dz * fade
+			end
 			local damp = dampOf[v]
 			if damp then
 				dx, dy, dz = dx * damp, dy * damp, dz * damp
@@ -1322,6 +1352,7 @@ function Renderer.Stop()
 		placeholderAdded = nil
 	end
 	destroyMesh()
+	budgetLevel = 0
 	if tintFrame then
 		local gui = tintFrame.Parent
 		if gui then

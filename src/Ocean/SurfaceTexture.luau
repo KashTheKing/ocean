@@ -24,6 +24,7 @@ local TAU = 2 * math.pi
 local ROWS_PER_SLICE = 8 -- baked per frame (~2-3 ms)
 
 local SurfaceTexture = {}
+local FULL = Vector2.one * SIZE
 SurfaceTexture.Ready = false
 local smooth = true
 
@@ -116,7 +117,7 @@ local function bake(target: EditableImage, token: number)
 		end
 		frames[f] = pixels
 		if f == 1 then -- show something straight away
-			target:WritePixelsBuffer(Vector2.zero, Vector2.one * SIZE, pixels)
+			target:WritePixelsBuffer(Vector2.zero, FULL, pixels)
 		end
 	end
 	SurfaceTexture.BakeProgress = 1
@@ -126,7 +127,7 @@ end
 -- Returns the Content to put on the foam MeshPart's TextureContent. Safe to call repeatedly.
 function SurfaceTexture.Get(): Content
 	if not image then
-		local created = AssetService:CreateEditableImage({ Size = Vector2.one * SIZE })
+		local created = AssetService:CreateEditableImage({ Size = FULL })
 		if not created then -- the client's EditableImage budget is spent: plain white foam, no rings
 			warn("[Ocean] EditableImage memory budget reached: no animated foam texture")
 			return Content.none
@@ -149,7 +150,7 @@ function SurfaceTexture.Get(): Content
 			if not smooth then
 				if a ~= shown then
 					shown = a
-					created:WritePixelsBuffer(Vector2.zero, Vector2.one * SIZE, frames[a + 1])
+					created:WritePixelsBuffer(Vector2.zero, FULL, frames[a + 1])
 				end
 				return
 			end
@@ -162,7 +163,7 @@ function SurfaceTexture.Get(): Content
 				local fa = readu8(foamA, i)
 				writeu8(blendFoam, i, fa + (readu8(foamB, i) - fa) * t)
 			end
-			created:WritePixelsBuffer(Vector2.zero, Vector2.one * SIZE, blendFoam)
+			created:WritePixelsBuffer(Vector2.zero, FULL, blendFoam)
 		end)
 	end
 	return Content.fromObject(image :: EditableImage)

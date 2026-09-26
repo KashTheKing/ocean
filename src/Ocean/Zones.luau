@@ -21,6 +21,33 @@ local Weather = require(script.Parent.Weather)
 
 local WEATHER_PREFIX = "Zone:" -- the zone's ocean weather, so it never clashes with a user weather
 
+--[=[
+	@class Zones
+
+	Tag a BasePart or Model `OceanZone` and the sea inside it is its own: any Ocean setting set as an
+	attribute on the zone overrides the module's value there. Weather settings (waves, colours, foam,
+	spray) become that zone's weather, cross-faded across the rim; buoyancy settings blend per assembly
+	the same way. Zones can move and their attributes can change live (they are re-read twice a second).
+
+	Zone attributes:
+	- any setting name: override of that setting inside the zone
+	- `OceanBlend`: studs of rim over which the sea cross-fades (default 35% of the radius)
+
+	The plugin's Zones addon fills these from an Ocean preset and handles lighting on entering and leaving.
+]=]
+--[=[
+	@interface Zone
+	@within Zones
+	.Name string
+	.Instance Instance
+	.CFrame CFrame
+	.Half Vector3
+	.X number
+	.Z number
+	.Radius number
+	.Blend number
+	.Overrides { [string]: any }
+]=]
 local Zones = {}
 
 export type Zone = {
@@ -84,6 +111,10 @@ local function publish(zone: Zone)
 	})
 end
 
+--[=[
+	@within Zones
+	Re-reads every `OceanZone`. Runs twice a second on its own.
+]=]
 function Zones.Refresh()
 	table.clear(list)
 	local seen: { [string]: boolean } = {}
@@ -139,11 +170,22 @@ function Zones.Refresh()
 	end
 end
 
+--[=[
+	@within Zones
+	Every zone.
+	@return { Zone }
+]=]
 function Zones.List(): { Zone }
 	return list
 end
 
 -- The zone whose box contains the point (the first one, if they overlap), or nil.
+--[=[
+	@within Zones
+	The zone whose box contains the point (the first, if they overlap), or nil.
+	@param position Vector3
+	@return Zone?
+]=]
 function Zones.At(position: Vector3): Zone?
 	for _, zone in list do
 		local l = zone.CFrame:PointToObjectSpace(position)
@@ -156,6 +198,15 @@ end
 
 -- A numeric setting at (x, z): the module's value, pulled toward each zone's override across its
 -- rim with the same fade the sea uses, so physics and visuals agree.
+--[=[
+	@within Zones
+	A numeric setting at `(x, z)`: the module's value pulled toward each zone's override across its rim,
+	with the same fade the sea uses.
+	@param name string
+	@param x number
+	@param z number
+	@return number
+]=]
 function Zones.Value(name: string, x: number, z: number): number
 	local value = Settings.Get(name)
 	for _, zone in list do
@@ -174,6 +225,10 @@ function Zones.Value(name: string, x: number, z: number): number
 	return value
 end
 
+--[=[
+	@within Zones
+	@private
+]=]
 function Zones.Init()
 	if connection then
 		return
@@ -188,6 +243,10 @@ function Zones.Init()
 	end)
 end
 
+--[=[
+	@within Zones
+	@private
+]=]
 function Zones.Stop()
 	if connection then
 		connection:Disconnect()

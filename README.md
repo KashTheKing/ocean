@@ -1,5 +1,7 @@
 # Infinite Ocean - module
 
+Documentation, tutorial and API reference: **https://kashtheking.com/infinite-ocean/**
+
 The open-source core of Infinite Ocean: an infinite Gerstner-wave sea for Roblox on
 `EditableMesh`, synced between server and clients, with a weather API (named wave/colour sets
 cross-faded in time and space), obstacles that calm the water, dry regions, water events and a

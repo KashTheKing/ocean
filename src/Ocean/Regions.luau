@@ -12,6 +12,30 @@ local RunService = game:GetService("RunService")
 
 local Settings = require(script.Parent.Settings)
 
+--[=[
+	@class Regions
+
+	Dry regions: tag a BasePart or Model `OceanDry` and there is no water inside its box. The surface
+	sinks under it, the underwater tint stays off for a camera inside, characters do not swim there and
+	water events treat it as air. Submarine interiors, underwater rooms, diving bells.
+
+	A float inside a dry region gets no lift unless the region belongs to it (same model or welded
+	assembly), so a submarine's hull floats while cargo inside it does not.
+]=]
+--[=[
+	@interface Box
+	@within Regions
+	.CFrame CFrame
+	.Half Vector3 -- half size
+	.X number
+	.Z number
+	.Reach number -- bounding radius in XZ
+	.Bottom number -- world Y
+	.Top number -- world Y
+	.Instance Instance -- the tagged part or model
+	.Model Model? -- the model it belongs to, if any
+	.Owner BasePart? -- the assembly it is welded into, if any
+]=]
 local Regions = {}
 
 export type Box = {
@@ -31,6 +55,10 @@ local boxes: { Box } = {}
 local timer = 0
 local connection: RBXScriptConnection? = nil
 
+--[=[
+	@within Regions
+	Re-reads every `OceanDry` instance. Runs twice a second on its own.
+]=]
 function Regions.Refresh()
 	table.clear(boxes)
 	for _, instance in CollectionService:GetTagged(Settings.Get("DryTag")) do
@@ -68,11 +96,24 @@ function Regions.Refresh()
 	end
 end
 
+--[=[
+	@within Regions
+	Every dry box.
+	@return { Box }
+]=]
 function Regions.List(): { Box }
 	return boxes
 end
 
 -- Boxes whose XZ footprint touches the circle (x, z, radius).
+--[=[
+	@within Regions
+	Dry boxes whose footprint touches the circle `(x, z, radius)`.
+	@param x number
+	@param z number
+	@param radius number
+	@return { Box }
+]=]
 function Regions.Near(x: number, z: number, radius: number): { Box }
 	local near = {}
 	for _, box in boxes do
@@ -91,6 +132,12 @@ local function inside(box: Box, point: Vector3): boolean
 	return math.abs(l.X) <= h.X and math.abs(l.Y) <= h.Y and math.abs(l.Z) <= h.Z
 end
 
+--[=[
+	@within Regions
+	True inside any dry box. [Ocean:IsDry] calls this.
+	@param point Vector3
+	@return boolean
+]=]
 function Regions.IsDry(point: Vector3): boolean
 	for _, box in boxes do
 		if inside(box, point) then
@@ -113,6 +160,13 @@ local function exempt(box: Box, instance: Instance): boolean
 end
 
 -- IsDry for a specific part/model: crates inside a submarine are dry, the submarine itself is not.
+--[=[
+	@within Regions
+	Like [Regions.IsDry], but a box that belongs to `instance` (its own model or welded assembly) does not count.
+	@param point Vector3
+	@param instance Instance
+	@return boolean
+]=]
 function Regions.IsDryFor(point: Vector3, instance: Instance): boolean
 	for _, box in boxes do
 		if not exempt(box, instance) and inside(box, point) then
@@ -123,6 +177,15 @@ function Regions.IsDryFor(point: Vector3, instance: Instance): boolean
 end
 
 -- Ignoring height: is the column above/below (x, z) within `margin` studs of this box's footprint?
+--[=[
+	@within Regions
+	True when `(x, z)` is within the box's footprint, grown by `margin` studs.
+	@param box Box
+	@param x number
+	@param z number
+	@param margin number?
+	@return boolean
+]=]
 function Regions.CoversXZ(box: Box, x: number, z: number, margin: number?): boolean
 	local l = box.CFrame:PointToObjectSpace(Vector3.new(x, box.CFrame.Position.Y, z))
 	local m = margin or 0
@@ -130,6 +193,16 @@ function Regions.CoversXZ(box: Box, x: number, z: number, margin: number?): bool
 end
 
 -- If (x, z) is inside the footprint, push it out to the nearest wall. Returns x, z, wasInside.
+--[=[
+	@within Regions
+	The nearest point on the box's footprint edge to `(x, z)`, and whether the point was inside.
+	@param box Box
+	@param x number
+	@param z number
+	@return number -- x
+	@return number -- z
+	@return boolean -- was inside
+]=]
 function Regions.PushOut(box: Box, x: number, z: number): (number, number, boolean)
 	local cf, h = box.CFrame, box.Half
 	local l = cf:PointToObjectSpace(Vector3.new(x, cf.Position.Y, z))
@@ -146,6 +219,10 @@ function Regions.PushOut(box: Box, x: number, z: number): (number, number, boole
 	return w.X, w.Z, true
 end
 
+--[=[
+	@within Regions
+	@private
+]=]
 function Regions.Init()
 	if connection then
 		return
@@ -160,6 +237,10 @@ function Regions.Init()
 	end)
 end
 
+--[=[
+	@within Regions
+	@private
+]=]
 function Regions.Stop()
 	if connection then
 		connection:Disconnect()

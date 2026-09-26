@@ -18,6 +18,45 @@ local Settings = require(script.Parent.Settings)
 local ATTRIBUTE = "WeatherState"
 local DEFAULT = "Default"
 
+--[=[
+	@class Weather
+
+	The replicated weather state, behind [Ocean:CreateWeather], [Ocean:SetWeather] and the zone
+	methods. It is state, not a controller: your own scripts decide what the weather is. The whole state
+	is one JSON attribute on the module, so late joiners get it for free.
+
+	`"Default"` always exists and is simply the module's attribute values.
+]=]
+--[=[
+	@interface Blendable
+	@within Weather
+	.Current string -- the weather being shown (or faded toward)
+	.Previous string? -- the weather being faded from
+	.Start number -- server time the fade began
+	.Duration number -- seconds
+]=]
+--[=[
+	@interface Zone
+	@within Weather
+	.X number
+	.Z number
+	.Radius number
+	.Blend number -- studs of rim over which it cross-fades
+	.Current string
+	.Previous string?
+	.Start number
+	.Duration number
+]=]
+--[=[
+	@prop State { Weathers: { [string]: { [string]: any } }, Global: Blendable, Zones: { [string]: Zone } }
+	@within Weather
+	The current state.
+]=]
+--[=[
+	@prop DEFAULT string
+	@within Weather
+	`"Default"`.
+]=]
 local Weather = {}
 Weather.DEFAULT = DEFAULT
 Weather.ATTRIBUTE = ATTRIBUTE
@@ -42,6 +81,10 @@ end
 
 -- Pull the replicated state in. Cheap no-op when unchanged. Every read and mutation below starts
 -- with this, so the attribute is the single source of truth even across separate require contexts.
+--[=[
+	@within Weather
+	Pulls the replicated state in if it changed. Every read and write below does this first.
+]=]
 function Weather.Decode()
 	local encoded = Settings.GetHost():GetAttribute(ATTRIBUTE)
 	if typeof(encoded) ~= "string" or encoded == lastDecoded then
@@ -54,11 +97,21 @@ function Weather.Decode()
 	end
 end
 
+--[=[
+	@within Weather
+	@param name string
+	@return boolean
+]=]
 function Weather.Exists(name: string): boolean
 	Weather.Decode()
 	return name == DEFAULT or Weather.State.Weathers[name] ~= nil
 end
 
+--[=[
+	@within Weather
+	Every weather name, `"Default"` first, the rest sorted.
+	@return { string }
+]=]
 function Weather.Names(): { string }
 	Weather.Decode()
 	local names = { DEFAULT }
@@ -70,6 +123,12 @@ function Weather.Names(): { string }
 end
 
 -- Every Weather = true setting for this weather type: override if it has one, else the attribute.
+--[=[
+	@within Weather
+	Every weather setting for the named weather: its override where it has one, else the module value.
+	@param name string
+	@return { [string]: any }
+]=]
 function Weather.Resolve(name: string): { [string]: any }
 	local overrides = Weather.State.Weathers[name] or {}
 	local resolved = {}
@@ -91,6 +150,13 @@ function Weather.Resolve(name: string): { [string]: any }
 end
 
 -- 0..1 progress of a cross-fade, smoothed. `now` is workspace:GetServerTimeNow().
+--[=[
+	@within Weather
+	Progress of a cross-fade, 0 to 1, smoothed.
+	@param blend Blendable
+	@param now number -- `workspace:GetServerTimeNow()`
+	@return number
+]=]
 function Weather.Alpha(blend: Blendable, now: number): number
 	if not blend.Previous or blend.Duration <= 0 then
 		return 1
@@ -109,6 +175,13 @@ local function retarget(blend: Blendable, name: string, transition: number?)
 	end
 end
 
+--[=[
+	@within Weather
+	@server
+	See [Ocean:CreateWeather].
+	@param name string
+	@param overrides { [string]: any }
+]=]
 function Weather.Create(name: string, overrides: { [string]: any })
 	Weather.Decode()
 	assert(typeof(name) == "string" and name ~= DEFAULT, `"{DEFAULT}" is the attribute values; pick another name`)
@@ -131,12 +204,26 @@ function Weather.Create(name: string, overrides: { [string]: any })
 	publish()
 end
 
+--[=[
+	@within Weather
+	@server
+	See [Ocean:SetWeather].
+	@param name string
+	@param transition number?
+]=]
 function Weather.Set(name: string, transition: number?)
 	Weather.Decode()
 	retarget(Weather.State.Global, name, transition)
 	publish()
 end
 
+--[=[
+	@within Weather
+	@server
+	See [Ocean:CreateZone].
+	@param name string
+	@param zone { Position: Vector3, Radius: number, Blend: number?, Weather: string }
+]=]
 function Weather.CreateZone(name: string, zone: { Position: Vector3, Radius: number, Blend: number?, Weather: string })
 	Weather.Decode()
 	assert(Weather.Exists(zone.Weather), `Unknown ocean weather "{zone.Weather}" - CreateWeather it first`)
@@ -152,6 +239,14 @@ function Weather.CreateZone(name: string, zone: { Position: Vector3, Radius: num
 	publish()
 end
 
+--[=[
+	@within Weather
+	@server
+	See [Ocean:SetZoneWeather].
+	@param name string
+	@param weatherName string
+	@param transition number?
+]=]
 function Weather.SetZone(name: string, weatherName: string, transition: number?)
 	Weather.Decode()
 	local zone = assert(Weather.State.Zones[name], `Unknown ocean zone "{name}"`)
@@ -159,12 +254,23 @@ function Weather.SetZone(name: string, weatherName: string, transition: number?)
 	publish()
 end
 
+--[=[
+	@within Weather
+	@server
+	See [Ocean:RemoveZone].
+	@param name string
+]=]
 function Weather.RemoveZone(name: string)
 	Weather.Decode()
 	Weather.State.Zones[name] = nil
 	publish()
 end
 
+--[=[
+	@within Weather
+	@server
+	Removes every scripted zone.
+]=]
 function Weather.ClearZones()
 	Weather.Decode()
 	table.clear(Weather.State.Zones)

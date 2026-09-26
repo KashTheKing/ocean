@@ -1,0 +1,118 @@
+.hero {
+	position: relative;
+	padding: 7rem 1.5rem 6rem;
+	text-align: center;
+	background-color: var(--ifm-hero-background-color);
+	background-size: cover;
+	background-position: center;
+	overflow: hidden;
+}
+.hero::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(7, 17, 43, 0.55) 0%, rgba(7, 17, 43, 0.85) 100%);
+}
+.heroInner {
+	position: relative;
+	max-width: 860px;
+	margin: 0 auto;
+}
+.title {
+	font-size: clamp(2.6rem, 6vw, 4.4rem);
+	color: #48e0ff;
+	margin-bottom: 0.5rem;
+	text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+.tagline {
+	font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+	color: #ffffff;
+	margin-bottom: 2rem;
+	text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+.buttons {
+	display: flex;
+	gap: 1rem;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+.buttons :global(.button--outline) {
+	color: #ffffff;
+	border-color: #48e0ff;
+}
+.buttons :global(.button--outline:hover) {
+	background: rgba(72, 224, 255, 0.15);
+	color: #ffffff;
+}
+.buttons :global(.button--primary) {
+	color: #07112b;
+}
+
+.main {
+	max-width: 1120px;
+	margin: 0 auto;
+	padding: 3rem 1.5rem 4rem;
+}
+.features {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 1.25rem;
+}
+.feature {
+	background: var(--ocean-card);
+	border: 1px solid var(--ocean-card-border);
+	border-radius: 14px;
+	padding: 1.4rem 1.5rem;
+}
+.feature h3 {
+	margin-bottom: 0.4rem;
+}
+.feature p {
+	margin: 0;
+	color: var(--ifm-font-color-base);
+	opacity: 0.9;
+}
+
+.split {
+	display: grid;
+	grid-template-columns: 1fr 1.3fr;
+	gap: 2.5rem;
+	align-items: center;
+	margin: 4.5rem 0;
+}
+@media (max-width: 900px) {
+	.split {
+		grid-template-columns: 1fr;
+	}
+}
+
+.gallery {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+	gap: 1.5rem;
+}
+@media (max-width: 480px) {
+	.gallery {
+		grid-template-columns: 1fr;
+	}
+}
+.shot {
+	margin: 0;
+}
+.shot img {
+	width: 100%;
+	border-radius: 14px;
+	border: 1px solid var(--ocean-card-border);
+	box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+.shot figcaption {
+	margin-top: 0.6rem;
+	text-align: center;
+	color: var(--ifm-color-primary);
+	font-weight: 500;
+}
+
+.cta {
+	text-align: center;
+	margin-top: 4.5rem;
+}

@@ -16,6 +16,32 @@ local RunService = game:GetService("RunService")
 local Settings = require(script.Parent.Settings)
 local Weather = require(script.Parent.Weather)
 
+--[=[
+	@class Waves
+
+	The wave function: Gerstner waves, shared by the renderer (client) and the physics (both sides).
+	It is deterministic in the settings, the weather state and server time, so a height sampled on the
+	server matches the surface a client sees.
+
+	Each weather compiles to a *set* of six waves plus its look. The sea at a point is a weighted sum of
+	whole sets (zones cross-fading at their rims, the global weather for the rest, and two sets while a
+	weather is transitioning), never a blend of wave parameters.
+]=]
+--[=[
+	@prop SeaLevel number
+	@within Waves
+	The `SeaLevel` setting, cached.
+]=]
+--[=[
+	@prop Sets { [string]: Set }
+	@within Waves
+	Compiled wave sets by weather name.
+]=]
+--[=[
+	@prop Version number
+	@within Waves
+	Increments every time the sets are recompiled.
+]=]
 local Waves = {}
 
 local N = Settings.WAVE_COUNT
@@ -87,6 +113,11 @@ end
 local flat = false -- FlatSea: no displacement anywhere, the surface is SeaLevel
 local frozen = false -- StaticWaves: the wave clock holds, so the surface never moves
 
+--[=[
+	@within Waves
+	Recompiles every weather into wave sets from the current settings and weather state. Runs
+	automatically whenever a setting or the weather changes.
+]=]
 function Waves.Refresh()
 	Weather.Decode()
 	flat = Settings.Get("FlatSea") == true
@@ -121,9 +152,13 @@ end
 ---------------------------------------------------------------------------------------------
 
 local DEFAULT_SHORE = 40
-local obstacles = {} :: { any } -- { X, Z, Radius, Shore, Calmness, CFrame, HalfX, HalfZ }
+local obstacles = {} :: { any } -- { X, Z, Radius, Shore, Calmness, RX, RZ, LX, LZ, HalfX, HalfZ }
 local obstacleTimer = 0
 
+--[=[
+	@within Waves
+	Re-reads every `OceanObstacle` in the workspace. Runs twice a second on its own.
+]=]
 function Waves.RefreshObstacles()
 	table.clear(obstacles)
 	for _, instance in CollectionService:GetTagged(Settings.Get("ObstacleTag")) do
@@ -151,7 +186,10 @@ function Waves.RefreshObstacles()
 			Shore = math.max(if typeof(shore) == "number" then shore else DEFAULT_SHORE, 1),
 			-- 1 = flat against it, 0 = the waves pass this obstacle untouched
 			Calmness = math.clamp(if typeof(calmness) == "number" then calmness else 1, 0, 1),
-			CFrame = cframe,
+			RX = right.X,
+			RZ = right.Z,
+			LX = look.X,
+			LZ = look.Z,
 			HalfX = size.X / 2,
 			HalfZ = size.Z / 2,
 		})
@@ -159,6 +197,14 @@ function Waves.RefreshObstacles()
 end
 
 -- Obstacles whose calming ring touches the circle (x, z, radius); nothing = all of them.
+--[=[
+	@within Waves
+	Obstacles whose calming ring touches the circle `(x, z, radius)`; with no arguments, all of them.
+	@param x number?
+	@param z number?
+	@param radius number?
+	@return { any }
+]=]
 function Waves.ObstaclesNear(x: number?, z: number?, radius: number?): { any }
 	if not x then
 		return obstacles
@@ -176,12 +222,23 @@ end
 
 -- 1 = open water, 1 - OceanCalmness = against the obstacle; a gentle (quintic) fade across the shore
 -- ring in between, so the sea settles into the shore instead of going flat at a line.
+--[=[
+	@within Waves
+	The wave multiplier at `(x, z)` from the given obstacles: 1 in open water, down to
+	`1 - OceanCalmness` against an obstacle, easing across its shore ring.
+	@param list { any } -- from [Waves.ObstaclesNear]
+	@param x number
+	@param z number
+	@return number
+]=]
 function Waves.Damp(list: { any }, x: number, z: number): number
 	local factor = 1
 	for _, o in list do
 		-- signed distance to the box footprint: positive outside, negative inside
-		local l = o.CFrame:PointToObjectSpace(Vector3.new(x, o.CFrame.Position.Y, z))
-		local ox, oz = math.abs(l.X) - o.HalfX, math.abs(l.Z) - o.HalfZ
+		local dx, dz = x - o.X, z - o.Z
+		local lx = dx * o.RX + dz * o.RZ
+		local lz = dx * o.LX + dz * o.LZ
+		local ox, oz = math.abs(lx) - o.HalfX, math.abs(lz) - o.HalfZ
 		local d = if ox > 0 or oz > 0 then math.sqrt(math.max(ox, 0) ^ 2 + math.max(oz, 0) ^ 2) else math.max(ox, oz)
 		-- fully calmed out to Shore studs beyond the edge, then the waves come back over another Shore
 		if d < 2 * o.Shore then
@@ -203,7 +260,14 @@ end
 
 local connections: { any } = {}
 
+--[=[
+	@within Waves
+	@private
+]=]
 function Waves.Init()
+	if #connections > 0 then
+		return
+	end
 	Waves.Refresh()
 	Waves.RefreshObstacles()
 	table.insert(connections, Settings.OnChanged(Waves.Refresh)) -- any setting, or the replicated weather state
@@ -211,6 +275,10 @@ function Waves.Init()
 	table.insert(connections, workspace:GetPropertyChangedSignal("GlobalWind"):Connect(Waves.Refresh))
 end
 
+--[=[
+	@within Waves
+	@private
+]=]
 function Waves.Stop()
 	for _, connection in connections do
 		connection:Disconnect()
@@ -219,6 +287,11 @@ function Waves.Stop()
 end
 
 -- Synced wave clock. (Weather fades use unscaled server time.)
+--[=[
+	@within Waves
+	The synced wave clock: server time times `TimeScale`, or 0 while `StaticWaves` is on.
+	@return number
+]=]
 function Waves.Time(): number
 	if frozen then
 		return 0
@@ -230,6 +303,14 @@ end
 -- per-vertex Gather only ever walks the few zones on screen. Pass nothing to get them all.
 -- Linear scan. It runs once per frame, not per vertex, so it is fine into the thousands
 -- of zones; drop an octree in here if you ever really have that many.
+--[=[
+	@within Waves
+	Scripted weather zones whose disc touches the circle `(x, z, radius)`; with no arguments, all of them.
+	@param x number?
+	@param z number?
+	@param radius number?
+	@return { any }
+]=]
 function Waves.ZonesNear(x: number?, z: number?, radius: number?): { any }
 	if not x then
 		return zones
@@ -245,6 +326,12 @@ function Waves.ZonesNear(x: number?, z: number?, radius: number?): { any }
 	return near
 end
 
+--[=[
+	@within Waves
+	True while the global weather is mid-transition.
+	@param now number -- `workspace:GetServerTimeNow()`
+	@return boolean
+]=]
 function Waves.IsBlending(now: number): boolean
 	return Weather.Alpha(Weather.State.Global, now) < 1
 end
@@ -268,6 +355,16 @@ local function push(count: number, blend: any, weight: number, now: number): num
 end
 
 -- Fills LayerSets/LayerWeights for the point and returns the layer count. Weights sum to 1.
+--[=[
+	@within Waves
+	Fills `Waves.LayerSets` and `Waves.LayerWeights` with the wave sets that apply at `(x, z)` and
+	returns how many there are. The weights sum to 1.
+	@param zoneList { any } -- from [Waves.ZonesNear]
+	@param x number
+	@param z number
+	@param now number -- `workspace:GetServerTimeNow()`
+	@return number
+]=]
 function Waves.Gather(zoneList: { any }, x: number, z: number, now: number): number
 	local count, covered = 0, 0
 	for _, zone in zoneList do
@@ -304,14 +401,8 @@ local function displaceSet(set: Set, x: number, z: number, t: number): (number, 
 	return ox, oy, oz
 end
 
--- Displacement of the rest-position surface point (x, z).
-function Waves.Displace(x: number, z: number, t: number?, now: number?): (number, number, number)
-	if flat then
-		return 0, 0, 0
-	end
-	local clock = now or workspace:GetServerTimeNow()
-	local time = t or clock * timeScale
-	local count = Waves.Gather(zones, x, z, clock)
+-- Sum of the gathered layers at (x, z): call after Waves.Gather.
+local function displaceGathered(count: number, x: number, z: number, time: number): (number, number, number)
 	local ox, oy, oz = 0, 0, 0
 	for i = 1, count do
 		local weight = Waves.LayerWeights[i]
@@ -320,6 +411,28 @@ function Waves.Displace(x: number, z: number, t: number?, now: number?): (number
 		oy += dy * weight
 		oz += dz * weight
 	end
+	return ox, oy, oz
+end
+
+--[=[
+	@within Waves
+	Displacement of the surface point that rests at `(x, z)`: how far it has been pushed along X, up
+	along Y and along Z. Zero everywhere while `FlatSea` is on.
+	@param x number
+	@param z number
+	@param t number? -- wave clock (default: now)
+	@param now number? -- server time (default: now)
+	@return number -- X offset
+	@return number -- Y offset
+	@return number -- Z offset
+]=]
+function Waves.Displace(x: number, z: number, t: number?, now: number?): (number, number, number)
+	if flat then
+		return 0, 0, 0
+	end
+	local clock = now or workspace:GetServerTimeNow()
+	local time = t or clock * timeScale
+	local ox, oy, oz = displaceGathered(Waves.Gather(zones, x, z, clock), x, z, time)
 	if #obstacles > 0 then
 		local damp = Waves.Damp(obstacles, x, z)
 		ox, oy, oz = ox * damp, oy * damp, oz * damp
@@ -329,19 +442,45 @@ end
 
 -- World-space surface height above (x, z). Gerstner waves shove points sideways, so we
 -- fixed-point iterate to find which rest point landed on (x, z). 3 rounds is sub-0.25 stud.
+--[=[
+	@within Waves
+	World Y of the surface above `(x, z)`. Gerstner waves move points sideways, so this iterates to find
+	the rest point that lands on `(x, z)`; the answer is within a quarter stud. [Ocean:GetHeight] calls this.
+	@param x number
+	@param z number
+	@param t number? -- wave clock (default: now)
+	@param now number? -- server time (default: now)
+	@return number
+]=]
 function Waves.Height(x: number, z: number, t: number?, now: number?): number
+	if flat then
+		return Waves.SeaLevel
+	end
 	local clock = now or workspace:GetServerTimeNow()
 	local time = t or clock * timeScale
+	-- the layer weights and the obstacle damping vary over tens of studs, the rest point over a
+	-- few: sample both once at (x, z) and reuse them for every round
+	local count = Waves.Gather(zones, x, z, clock)
+	local damp = if #obstacles > 0 then Waves.Damp(obstacles, x, z) else 1
 	local px, pz = x, z
 	local dy = 0
 	for _ = 1, 3 do
-		local dx, y, dz = Waves.Displace(px, pz, time, clock)
-		px, pz, dy = x - dx, z - dz, y
+		local dx, y, dz = displaceGathered(count, px, pz, time)
+		px, pz, dy = x - dx * damp, z - dz * damp, y * damp
 	end
 	return Waves.SeaLevel + dy
 end
 
 -- One weather setting blended at a point (numbers only), e.g. Waves.LookNumber("SplashRate", x, z).
+--[=[
+	@within Waves
+	One numeric weather setting blended at a point, for example `Waves.LookNumber("SplashRate", x, z)`.
+	`"MaxAmp"` gives the tallest possible crest there.
+	@param name string
+	@param x number
+	@param z number
+	@return number
+]=]
 function Waves.LookNumber(name: string, x: number, z: number): number
 	local count = Waves.Gather(zones, x, z, workspace:GetServerTimeNow())
 	local value = 0
@@ -353,6 +492,12 @@ function Waves.LookNumber(name: string, x: number, z: number): number
 end
 
 -- Self-check: `require(game.ReplicatedStorage.Ocean.Waves).SelfTest()` in the command bar.
+--[=[
+	@within Waves
+	Checks that [Waves.Height] inverts [Waves.Displace] and that layer weights sum to 1. Run it from the
+	command bar: `require(game.ReplicatedStorage.Ocean.Waves).SelfTest()`.
+	@return string
+]=]
 function Waves.SelfTest(): string
 	Waves.Refresh()
 	local t = 1234.5

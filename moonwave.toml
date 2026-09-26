@@ -1,0 +1,59 @@
+title = "Infinite Ocean"
+gitRepoUrl = "https://github.com/KashTheKing/ocean"
+gitSourceBranch = "main"
+changelog = false
+
+[docusaurus]
+url = "https://kashtheking.com"
+baseUrl = "/infinite-ocean/"
+organizationName = "KashTheKing"
+projectName = "infinite-ocean"
+tagline = "An infinite, animated, fully scriptable sea for Roblox"
+favicon = "img/favicon.svg"
+trailingSlash = true
+onBrokenAnchors = "ignore"
+
+[navbar]
+title = "Infinite Ocean"
+
+[navbar.logo]
+src = "img/favicon.svg"
+alt = "Infinite Ocean"
+
+[[navbar.items]]
+href = "https://github.com/KashTheKing/ocean"
+label = "Module source"
+position = "right"
+
+[footer]
+style = "dark"
+copyright = "Copyright © 2026 KashTheKing. Infinite Ocean module is MIT; the Studio plugin and its addons are proprietary."
+
+[[footer.links]]
+title = "Docs"
+items = [
+	{ label = "Getting started", to = "/docs/intro" },
+	{ label = "Tutorial", to = "/docs/tutorial" },
+	{ label = "Plugin guide", to = "/docs/plugin" },
+	{ label = "API reference", to = "/api/Ocean" },
+]
+
+[[footer.links]]
+title = "Support"
+items = [
+	{ label = "@KashTheKing on Roblox", href = "https://www.roblox.com/search/users?keyword=KashTheKing" },
+	{ label = "@KashTheKing on X", href = "https://x.com/KashTheKing" },
+	{ label = "@KashTheKing on YouTube", href = "https://www.youtube.com/@KashTheKing" },
+]
+
+[[classOrder]]
+section = "Start here"
+classes = ["Ocean", "Settings", "Presets"]
+
+[[classOrder]]
+section = "World"
+classes = ["Weather", "Zones", "Regions", "Tracker"]
+
+[[classOrder]]
+section = "Under the hood"
+classes = ["Waves"]

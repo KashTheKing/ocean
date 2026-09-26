@@ -5,6 +5,44 @@
 -- Each carries only its own keys and applies on top of whatever is set. The plugin lists them by
 -- kind; weathers take an Ocean preset: Ocean:CreateWeather("Pirate Seas", Ocean.Presets.Ocean["Pirate Seas"]).
 -- Weather ignores non-weather keys (materials, textures, physics).
+--[=[
+	@class Presets
+
+	Ready-made setting tables, plain data. Each carries only its own keys and applies on top of whatever
+	is already set.
+
+	- [Presets.Physics]: waves and buoyancy. `Calm` (the defaults), `Rough`, `Huge`, `Tsunami`, `Still`.
+	- [Presets.Visual]: the look. `Classic` (the defaults, like Roblox water), `Cartoony`, `Stylized`, `Realistic`.
+	- [Presets.Ocean]: a whole sea, one physics plus one look. `Island`, `Pirate Seas`, `Oil Rig`, `Great Flood`, `Blank`.
+
+	Any of them can be a weather: `Ocean:CreateWeather("Storm", Ocean.Presets.Ocean["Pirate Seas"])`.
+	Weather ignores the non-weather keys (materials, textures, physics).
+]=]
+--[=[
+	@prop Physics { [string]: { [string]: any } }
+	@within Presets
+	Wave and buoyancy presets by name.
+]=]
+--[=[
+	@prop Visual { [string]: { [string]: any } }
+	@within Presets
+	Look presets by name.
+]=]
+--[=[
+	@prop Ocean { [string]: { [string]: any } }
+	@within Presets
+	Whole-sea presets by name.
+]=]
+--[=[
+	@prop Lighting { [string]: any }
+	@within Presets
+	Per Ocean preset, the Lighting properties and Atmosphere/effects the plugin applies with it.
+]=]
+--[=[
+	@prop Aliases { [string]: string }
+	@within Presets
+	Older preset names mapped to current ones (`Storm`, `Deep Sea`, `Flat`, `Calm`).
+]=]
 local Presets = {}
 
 local function waves(list: { { number } }, into: { [string]: any }): { [string]: any }
@@ -24,7 +62,13 @@ local function merge(...: { [string]: any }): { [string]: any }
 	return into
 end
 
--- An Ocean preset by name, old names included.
+-- An Ocean preset by name, aliases included.
+--[=[
+	@within Presets
+	An Ocean preset by name, aliases included.
+	@param name string
+	@return { [string]: any }?
+]=]
 function Presets.Find(name: string): { [string]: any }?
 	return Presets.Ocean[name] or Presets.Ocean[Presets.Aliases[name]]
 end
@@ -145,7 +189,7 @@ Presets.Visual = {
 	},
 }
 
--- names from before the presets were reduced, for weather lists and zones saved with them
+-- alias names that resolve to a current preset (weather lists and zones may refer to them)
 Presets.Aliases = { Storm = "Pirate Seas", ["Deep Sea"] = "Oil Rig", Flat = "Blank", Calm = "Island" }
 
 Presets.Ocean = {

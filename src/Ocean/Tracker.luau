@@ -22,6 +22,22 @@ local Regions = require(script.Parent.Regions)
 local Settings = require(script.Parent.Settings)
 local Waves = require(script.Parent.Waves)
 
+--[=[
+	@class Tracker
+
+	Water state for tagged instances (`OceanFloat`, `OceanTrack`) and every player character, updated
+	each frame on whichever side you ask from. The transitions fire the signals on [Ocean]:
+	`EnteredWater`, `ExitedWater`, `WentUnderWater`, `WentAboveWater`. Inside an `OceanDry` region
+	nothing counts as water.
+]=]
+--[=[
+	@interface State
+	@within Tracker
+	.Touching boolean -- its bottom is below the surface
+	.Under boolean -- its top is below the surface
+	.Depth number -- studs below the surface (negative above)
+	.Surface number -- world Y of the surface there
+]=]
 local Tracker = {}
 
 export type State = { Touching: boolean, Under: boolean, Depth: number, Surface: number }
@@ -63,12 +79,16 @@ end
 local function step()
 	local seen: { [Instance]: boolean } = {}
 	local list: { Instance } = {}
-	for _, tag in { Settings.Get("FloatTag"), Settings.Get("TrackTag") } do
-		for _, instance in CollectionService:GetTagged(tag) do
-			if not seen[instance] and instance:IsDescendantOf(workspace) then
-				seen[instance] = true
-				table.insert(list, instance)
-			end
+	for _, instance in CollectionService:GetTagged(Settings.Get("FloatTag")) do
+		if instance:IsDescendantOf(workspace) then
+			seen[instance] = true
+			table.insert(list, instance)
+		end
+	end
+	for _, instance in CollectionService:GetTagged(Settings.Get("TrackTag")) do
+		if not seen[instance] and instance:IsDescendantOf(workspace) then
+			seen[instance] = true
+			table.insert(list, instance)
 		end
 	end
 	for _, player in Players:GetPlayers() do
@@ -103,17 +123,34 @@ local function step()
 			events[if under then "WentUnderWater" else "WentAboveWater"]:Fire(instance)
 		end
 	end
-	for instance in states do
+	for instance, state in states do
 		if not seen[instance] then
 			states[instance] = nil
+			if state.Under then
+				events.WentAboveWater:Fire(instance)
+			end
+			if state.Touching then
+				events.ExitedWater:Fire(instance)
+			end
 		end
 	end
 end
 
+--[=[
+	@within Tracker
+	The state of a tracked instance, or nil.
+	@param instance Instance
+	@return State?
+]=]
 function Tracker.GetState(instance: Instance): State?
 	return states[instance]
 end
 
+--[=[
+	@within Tracker
+	Every tracked instance touching the water.
+	@return { Instance }
+]=]
 function Tracker.GetInWater(): { Instance }
 	local list = {}
 	for instance, state in states do
@@ -124,6 +161,10 @@ function Tracker.GetInWater(): { Instance }
 	return list
 end
 
+--[=[
+	@within Tracker
+	@private
+]=]
 function Tracker.Init()
 	RunService.Heartbeat:Connect(step)
 end

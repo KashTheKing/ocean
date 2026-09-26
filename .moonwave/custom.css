@@ -1,0 +1,122 @@
+/* Infinite Ocean theme: deep navy pages, cyan headings and links, white body text. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+	--ifm-font-family-base: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+	--ifm-font-family-monospace: "JetBrains Mono", ui-monospace, Consolas, monospace;
+	--ifm-heading-font-weight: 700;
+	--ifm-code-font-size: 90%;
+	--ifm-global-radius: 10px;
+
+	/* light mode: white paper, navy text, deep-teal headings */
+	--ifm-color-primary: #0a7f96;
+	--ifm-color-primary-dark: #09727a;
+	--ifm-color-primary-darker: #086c73;
+	--ifm-color-primary-darkest: #07595f;
+	--ifm-color-primary-light: #0c8ca5;
+	--ifm-color-primary-lighter: #0d93ad;
+	--ifm-color-primary-lightest: #12a5c1;
+	--ifm-background-color: #f4f9fc;
+	--ifm-background-surface-color: #ffffff;
+	--ifm-font-color-base: #0d1b33;
+	--ifm-heading-color: #0a6f86;
+	--ifm-navbar-background-color: #0b1a3a;
+	--ifm-navbar-link-color: #e6f7fb;
+	--ifm-navbar-link-hover-color: #48e0ff;
+	--ifm-footer-background-color: #08122b;
+	--ifm-menu-color: #0d1b33;
+	--ifm-toc-border-color: rgba(10, 127, 150, 0.25);
+	--ifm-hero-background-color: #0b1a3a;
+	--ifm-hero-text-color: #ffffff;
+	--ocean-card: #ffffff;
+	--ocean-card-border: rgba(10, 127, 150, 0.2);
+	--docusaurus-highlighted-code-line-bg: rgba(72, 224, 255, 0.15);
+}
+
+[data-theme="dark"] {
+	--ifm-color-primary: #48e0ff;
+	--ifm-color-primary-dark: #22d8ff;
+	--ifm-color-primary-darker: #0fd4ff;
+	--ifm-color-primary-darkest: #00b4dc;
+	--ifm-color-primary-light: #6ee7ff;
+	--ifm-color-primary-lighter: #81eaff;
+	--ifm-color-primary-lightest: #b4f3ff;
+	--ifm-background-color: #07112b;
+	--ifm-background-surface-color: #0b1a3a;
+	--ifm-font-color-base: #ffffff;
+	--ifm-heading-color: #48e0ff;
+	--ifm-navbar-background-color: #0b1a3a;
+	--ifm-footer-background-color: #050c1f;
+	--ifm-menu-color: #dbe7f5;
+	--ifm-toc-border-color: rgba(72, 224, 255, 0.2);
+	--ifm-hero-background-color: #07112b;
+	--ifm-color-emphasis-300: #1f3560;
+	--ifm-table-stripe-background: rgba(72, 224, 255, 0.04);
+	--ifm-code-background: #0f2147;
+	--ifm-pre-background: #0a1736;
+	--ocean-card: #0b1a3a;
+	--ocean-card-border: rgba(72, 224, 255, 0.18);
+	--docusaurus-highlighted-code-line-bg: rgba(72, 224, 255, 0.12);
+}
+
+[data-theme="dark"] .navbar__title,
+[data-theme="dark"] .navbar__link,
+.navbar__title,
+.navbar__link {
+	color: #e6f7fb;
+}
+.navbar__link:hover,
+.navbar__link--active {
+	color: #48e0ff;
+}
+.navbar__toggle,
+.clean-btn.navbar__toggle,
+[data-theme="light"] .navbar .clean-btn {
+	color: #e6f7fb;
+}
+.navbar {
+	box-shadow: 0 1px 0 rgba(72, 224, 255, 0.25);
+}
+
+h1,
+h2,
+h3,
+h4 {
+	color: var(--ifm-heading-color);
+	letter-spacing: -0.01em;
+}
+
+a {
+	text-decoration-color: rgba(72, 224, 255, 0.5);
+}
+
+.markdown img {
+	border-radius: 12px;
+	border: 1px solid var(--ocean-card-border);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+	margin: 0.5rem 0 1.5rem;
+}
+
+.markdown table {
+	display: table;
+	width: 100%;
+}
+table th {
+	color: var(--ifm-heading-color);
+}
+
+.theme-doc-sidebar-menu .menu__link--active {
+	color: var(--ifm-color-primary);
+}
+
+.footer--dark {
+	--ifm-footer-title-color: #48e0ff;
+	--ifm-footer-link-color: #dbe7f5;
+	--ifm-footer-color: #9fb3d1;
+}
+
+/* moonwave API pages */
+.api-property-name,
+.api-function-name {
+	color: var(--ifm-color-primary);
+}
