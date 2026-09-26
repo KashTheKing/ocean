@@ -101,17 +101,32 @@ export default function Home() {
 					</div>
 					<CodeBlock language="lua">{SAMPLE}</CodeBlock>
 				</section>
+				<section className={styles.galleryIntro}>
+					<h2>Five presets, any ocean</h2>
+					<p>
+						Each Ocean preset is a starting point: waves, look, Lighting and Atmosphere in one press. Every setting
+						behind it is a slider, so the sea you ship is your own.
+					</p>
+				</section>
 				<section className={styles.gallery}>
-					<Shot src="/img/showcase-island.jpg" caption="Island: the default sea" />
-					<Shot src="/img/showcase-pirate-seas.jpg" caption="Pirate Seas: rough, stylized" />
-					<Shot src="/img/showcase-oil-rig.jpg" caption="Oil Rig: long realistic swell" />
-					<Shot src="/img/showcase-great-flood.jpg" caption="Great Flood: walls of water" />
+					<Shot src="/img/showcase-island.jpg" caption="Island preset: the default sea" />
+					<Shot src="/img/showcase-pirate-seas.jpg" caption="Pirate Seas preset: rough and stylized" />
+					<Shot src="/img/showcase-oil-rig.jpg" caption="Oil Rig preset: long realistic swell" />
+					<Shot src="/img/showcase-great-flood.jpg" caption="Great Flood preset: walls of water" />
 				</section>
 				<section className={styles.cta}>
 					<h2>Made by KashTheKing</h2>
 					<p>
 						Support, bug reports and feedback: <strong>@KashTheKing</strong> on Roblox, Discord, YouTube and X.
 					</p>
+					<div className={styles.buttons}>
+						<Link className="button button--primary button--md" href="https://discord.gg/6HYgCk22eD">
+							Join the Discord
+						</Link>
+						<Link className="button button--outline button--md" href="https://www.roblox.com/users/117445502/profile">
+							Roblox profile
+						</Link>
+					</div>
 				</section>
 			</main>
 		</Layout>

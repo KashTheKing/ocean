@@ -41,7 +41,8 @@ items = [
 [[footer.links]]
 title = "Support"
 items = [
-	{ label = "@KashTheKing on Roblox", href = "https://www.roblox.com/search/users?keyword=KashTheKing" },
+	{ label = "Discord server", href = "https://discord.gg/6HYgCk22eD" },
+	{ label = "@KashTheKing on Roblox", href = "https://www.roblox.com/users/117445502/profile" },
 	{ label = "@KashTheKing on X", href = "https://x.com/KashTheKing" },
 	{ label = "@KashTheKing on YouTube", href = "https://www.youtube.com/@KashTheKing" },
 ]

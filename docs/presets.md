@@ -5,7 +5,7 @@ title: Presets
 
 # Presets
 
-A preset is a plain table of settings that applies on top of whatever is set. Three kinds, all in `Ocean.Presets` and in the panel's **Presets** heading.
+A preset is a plain table of settings that applies on top of whatever is set. Three kinds, all in `Ocean.Presets` and in the panel's **Presets** heading. Presets are starting points, not the limit: every value they set is a slider in the panel, so start from the closest one and make the sea your own. Save the result with **Save current** and it becomes a preset too.
 
 ## Ocean presets
 

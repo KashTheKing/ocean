@@ -22,7 +22,7 @@ Infinite Ocean is an infinite, animated sea for Roblox. The **Studio plugin** in
 
 ## Install the plugin
 
-1. Get **Infinite Ocean** from the Creator Store and enable it in Studio's Plugins tab.
+1. Get [**Infinite Ocean**](https://create.roblox.com/store/asset/76752250508724/Infinite-Ocean) from the Creator Store and enable it in Studio's Plugins tab.
 2. Open the panel from the toolbar. The first time, read and accept the licence agreement.
 3. Press **Install**, or start the **Quick Start** and let it walk you through physics, look and addons.
 

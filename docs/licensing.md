@@ -19,4 +19,7 @@ Bundled third-party code keeps its own licence: Iris (MIT), buildthomas' Rain mo
 
 Bug reports, feedback and questions: **@KashTheKing** on Roblox, Discord, YouTube and X.
 
+- Discord server: [discord.gg/6HYgCk22eD](https://discord.gg/6HYgCk22eD)
+- Roblox profile: [KashTheKing](https://www.roblox.com/users/117445502/profile)
+
 When reporting a problem, include the plugin version (shown at the top and bottom of the panel), which Ocean preset you are on, and whether it happens in the Edit-mode preview, in a playtest, or in a live game.

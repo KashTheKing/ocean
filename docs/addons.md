@@ -95,7 +95,7 @@ Because a zone's look takes over the whole sea for a player inside it, keep zone
 
 ## DevTools
 
-A debug panel for developers: every setting live, weather and zone buttons, spawnable crates, rafts and buoys, a surface probe and a water-event log. It opens in Studio playtests and, in a live game, for the place owner, group members at `MinGroupRank` or above, and any `ExtraUserIds`. Toggle it with the chat command or the keybind.
+A debug panel for developers: every setting live, weather and zone buttons, spawnable crates, rafts and buoys, a surface probe and a water-event log. It opens in Studio playtests and, in a live game, for the place owner, group members at `MinGroupRank` or above, and any `ExtraUserIds`, or for every player when `Everyone` is on. Toggle it with the chat command or the keybind.
 
 | Setting | Default | What it does |
 |---|---|---|
@@ -105,6 +105,7 @@ A debug panel for developers: every setting live, weather and zone buttons, spaw
 | `Keybind` | F8 | Key that toggles the window (an Enum.KeyCode name) |
 | `MinGroupRank` | 254 | Group games: the lowest group rank that gets the tools |
 | `ExtraUserIds` | (blank) | More user ids that get the tools, comma separated |
+| `Everyone` | false | Every player gets the tools (for a showcase place) |
 
 ## AgentSupport (for MCP)
 
