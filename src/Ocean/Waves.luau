@@ -94,16 +94,19 @@ local function buildSet(name: string): Set
 			windAngle = math.atan2(wind.Z, wind.X)
 		end
 	end
+	-- WaveHeight scales the whole wave field: wavelength as well as amplitude, so a giant sea keeps
+	-- the same steepness and the crests never fold over (Gerstner loops appear past steepness 1).
+	local scale = math.max(look.WaveHeight, 1e-3)
 	for i = 1, N do
 		local angle = math.rad(look[`Wave{i}Angle`]) + windAngle
-		local length = look[`Wave{i}Length`]
+		local length = look[`Wave{i}Length`] * scale
 		local k = 2 * math.pi / length
 		local dx, dz = math.cos(angle), math.sin(angle)
 		set.Length[i] = length
 		set.DirX[i], set.DirZ[i] = dx, dz
 		set.Kx[i], set.Kz[i] = k * dx, k * dz
 		set.Omega[i] = math.sqrt(g * k) -- deep-water dispersion
-		set.Amp[i] = look[`Wave{i}Steepness`] * look.WaveHeight / k
+		set.Amp[i] = look[`Wave{i}Steepness`] / k
 		set.MaxAmp += set.Amp[i]
 	end
 	set.MaxAmp = math.max(set.MaxAmp, 1e-3)
@@ -506,7 +509,8 @@ function Waves.SelfTest(): string
 		local dx, dy, dz = Waves.Displace(x, z, t)
 		-- the surface point that started at (x, z) sits at (x + dx, z + dz); Height() must find it again
 		local h = Waves.Height(x + dx, z + dz, t)
-		assert(math.abs(h - (Waves.SeaLevel + dy)) < 0.4, `Height() inverse off by {h - Waves.SeaLevel - dy}`)
+		local tolerance = 0.03 * Waves.Sets[Weather.DEFAULT].MaxAmp -- the error scales with the sea
+		assert(math.abs(h - (Waves.SeaLevel + dy)) < tolerance, `Height() inverse off by {h - Waves.SeaLevel - dy}`)
 	end
 	for _ = 1, 50 do -- layer weights must always sum to 1, zones or not
 		local count =

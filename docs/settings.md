@@ -19,8 +19,8 @@ Every setting is an attribute on `ReplicatedStorage.Ocean`. The plugin panel edi
 
 | Setting | Type | Default | Range | What it does |
 |---|---|---|---|---|
-| `WaveGravity` | number | 60 | 5 to 400 | Wave speed: higher is faster *(weather)* |
-| `WaveHeight` | number | 1 | 0 to 2.5 | Overall wave height: every wave's amplitude times this *(weather)* |
+| `WaveGravity` | number | 60 | 5 to 2000 | Wave speed: higher is faster *(weather)* |
+| `WaveHeight` | number | 1 | 0 to 12 | Size of the whole sea: every wave's height and length times this, so giant waves keep their shape *(weather)* |
 | `TimeScale` | number | 1 | 0 to 3 | Overall wave speed: the wave clock runs this many times faster |
 | `UseWind` | boolean | false |  | Waves follow workspace.GlobalWind: the Wave angles become offsets from the wind direction |
 
@@ -54,7 +54,7 @@ These need the Buoyancy addon.
 | `FoamStart` | number | 0.45 | -1 to 1 | Crest height (0 to 1 of the tallest crest) where foam begins *(weather)* |
 | `FoamFull` | number | 0.9 | -1 to 1 | Crest height where the foam is fully opaque *(weather)* |
 | `FoamOpacity` | number | 0.35 | 0 to 1 | Opacity of the crest foam *(weather)* |
-| `WebOpacity` | number | 0 | 0 to 1 | Faint foam web on all water (0 = only on crests) *(weather)* |
+| `WebOpacity` | number | 0 | 0 to 1 | Semi-transparent animated foam over the whole near surface, not only the crests (0 = off) *(weather)* |
 | `SplashRate` | number | 2 | 0 to 40 | Crest spray bursts per second near the camera (drawn by the WaterSplash addon) *(weather)* |
 | `SplashHeight` | number | 0.4 | 0 to 1 | Crest height (0 to 1 of the tallest crest) a wave must reach to throw spray *(weather)* |
 | `FilmOpacity` | number | 0.05 | 0 to 1 | Translucent skin on the surface in the water's colour: things crossing it get a clear waterline *(weather)* |
@@ -112,4 +112,4 @@ Defaults (angle, length, steepness):
 | 5 | 100° | 56 | 0.12 |
 | 6 | -10° | 48 | 0.1 |
 
-Keep the sum of the steepness values (times `WaveHeight`) under about 1, or crests fold over into loops. Wavelengths shorter than about six times `CellSize` are smoothed away by the mesh, though the physics still feels them.
+Keep the sum of the steepness values under about 1, or crests fold over into loops; `WaveHeight` scales wavelength with height, so it never changes steepness. Wavelengths shorter than about six times `CellSize` are smoothed away by the mesh, though the physics still feels them.

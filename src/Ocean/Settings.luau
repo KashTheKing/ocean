@@ -82,10 +82,10 @@ Settings.List = {
 	num("SeafloorHeight", -436, -10000, 10000, 1, "General Physics", {
 		Hint = "World Y of the seafloor slab the plugin places (Placeholders). Kept under the deepest wave trough and that much above the fallen-parts height",
 	}),
-	num("WaveGravity", 60, 5, 400, 1, "Wave Physics", { Weather = true, Hint = "Wave speed: higher is faster" }),
-	num("WaveHeight", 1, 0, 2.5, 0.05, "Wave Physics", {
+	num("WaveGravity", 60, 5, 2000, 1, "Wave Physics", { Weather = true, Hint = "Wave speed: higher is faster" }),
+	num("WaveHeight", 1, 0, 12, 0.05, "Wave Physics", {
 		Weather = true,
-		Hint = "Overall wave height: every wave's amplitude times this",
+		Hint = "Size of the whole sea: every wave's height and length times this, so giant waves keep their shape",
 	}),
 	num(
 		"TimeScale",
@@ -198,15 +198,10 @@ Settings.List = {
 		Hint = "Crest height where the foam is fully opaque",
 	}),
 	num("FoamOpacity", 0.35, 0, 1, 0.01, "Visuals", { Weather = true, Hint = "Opacity of the crest foam" }),
-	num(
-		"WebOpacity",
-		0,
-		0,
-		1,
-		0.01,
-		"Visuals",
-		{ Weather = true, Hint = "Faint foam web on all water (0 = only on crests)" }
-	),
+	num("WebOpacity", 0, 0, 1, 0.01, "Visuals", {
+		Weather = true,
+		Hint = "Semi-transparent animated foam over the whole near surface, not only the crests (0 = off)",
+	}),
 	num(
 		"SplashRate",
 		2,
