@@ -54,7 +54,19 @@ Settings.List = {
 		"Wave Physics",
 		{ Weather = true, Hint = "Only drives wave speed: c = sqrt(g / k)" }
 	),
-	num("TimeScale", 1, 0, 3, 0.05, "General Physics", { Hint = "Wave clock speed. Changing it jumps the phase." }),
+	num("WaveHeight", 1, 0, 2.5, 0.05, "Wave Physics", {
+		Weather = true,
+		Hint = "Overall wave height: every wave's amplitude times this (past ~1.5 crests can pinch into loops)",
+	}),
+	num(
+		"TimeScale",
+		1,
+		0,
+		3,
+		0.05,
+		"Wave Physics",
+		{ Hint = "Overall wave speed: the wave clock runs this many times faster. Changing it jumps the phase" }
+	),
 	{
 		Name = "UseWind",
 		Default = false,

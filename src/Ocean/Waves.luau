@@ -77,7 +77,7 @@ local function buildSet(name: string): Set
 		set.DirX[i], set.DirZ[i] = dx, dz
 		set.Kx[i], set.Kz[i] = k * dx, k * dz
 		set.Omega[i] = math.sqrt(g * k) -- deep-water dispersion
-		set.Amp[i] = look[`Wave{i}Steepness`] / k
+		set.Amp[i] = look[`Wave{i}Steepness`] * look.WaveHeight / k
 		set.MaxAmp += set.Amp[i]
 	end
 	set.MaxAmp = math.max(set.MaxAmp, 1e-3)

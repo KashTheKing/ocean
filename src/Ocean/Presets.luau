@@ -38,7 +38,7 @@ Presets.Physics = {
 		{ -65, 80, 0.15 },
 		{ 100, 56, 0.12 },
 		{ -10, 48, 0.1 },
-	}, { WaveGravity = 60 }),
+	}, { WaveGravity = 60, WaveHeight = 1, TimeScale = 1 }),
 	Rough = waves({
 		{ 25, 420, 0.14 },
 		{ -20, 260, 0.16 },
