@@ -56,13 +56,13 @@ Presets.Physics = {
 		{ -5, 48, 0.04 },
 	}, { WaveGravity = 45 }),
 	Tsunami = waves({
-		{ 0, 1000, 0.3 }, -- one wall of water
-		{ 8, 1000, 0.2 },
-		{ 30, 240, 0.06 },
-		{ -40, 120, 0.05 },
-		{ 100, 64, 0.04 },
+		{ 0, 1000, 0.45 }, -- one wall of water
+		{ 6, 1000, 0.25 },
+		{ 30, 300, 0.08 },
+		{ -40, 140, 0.06 },
+		{ 100, 70, 0.04 },
 		{ -10, 48, 0.03 },
-	}, { WaveGravity = 30 }),
+	}, { WaveGravity = 25 }),
 	Still = waves({
 		{ 15, 320, 0 },
 		{ -30, 190, 0 },
@@ -150,17 +150,200 @@ Presets.Aliases = { Storm = "Pirate Seas", ["Deep Sea"] = "Oil Rig", Flat = "Bla
 
 Presets.Ocean = {
 	-- the default: a calm sea around an island or landmass
-	Island = merge(Presets.Physics.Calm, Presets.Visual.Classic),
-	["Pirate Seas"] = merge(Presets.Physics.Rough, Presets.Visual.Stylized),
-	["Oil Rig"] = merge(Presets.Physics.Huge, Presets.Visual.Realistic),
-	["Great Flood"] = merge(Presets.Physics.Tsunami, Presets.Visual.Realistic),
+	-- every Ocean preset states its rendering too, so switching between them never leaves a
+	-- previous preset's Quality or RenderDistance behind
+	Island = merge(Presets.Physics.Calm, Presets.Visual.Classic, {
+		Quality = "Regular",
+		RenderDistance = 40000,
+		Lit = true,
+		Highlights = true,
+		DynamicLighting = true,
+		DynamicColors = true,
+	}),
+	["Pirate Seas"] = merge(Presets.Physics.Rough, Presets.Visual.Stylized, {
+		Quality = "Regular",
+		RenderDistance = 40000,
+		Lit = true,
+		Highlights = true,
+		DynamicLighting = true,
+		DynamicColors = true,
+	}),
+	["Oil Rig"] = merge(Presets.Physics.Huge, Presets.Visual.Realistic, {
+		Quality = "Realistic",
+		RenderDistance = 60000,
+		Lit = true,
+		Highlights = true,
+		DynamicLighting = true,
+		DynamicColors = true,
+	}),
+	-- over the top on purpose: the whole sea rendered, at full quality, lit, foaming, every scale cue on
+	["Great Flood"] = merge(Presets.Physics.Tsunami, Presets.Visual.Realistic, {
+		FoamStyle = "Animated",
+		FoamStart = 0.1,
+		FoamFull = 0.45,
+		FoamOpacity = 1,
+		WebOpacity = 0.08,
+		FilmOpacity = 0.1,
+		Reflectance = 0.45,
+		SplashRate = 24,
+		SplashHeight = 0.2,
+		Quality = "Realistic",
+		RenderDistance = 100000,
+		Lit = true,
+		Highlights = true,
+		DynamicLighting = true,
+		DynamicColors = true,
+	}),
 	-- still water and the plainest look, to build your own from
 	Blank = merge(Presets.Physics.Still, Presets.Visual.Classic, {
 		FoamStyle = "None",
 		FilmOpacity = 0,
 		SplashRate = 0,
 		Reflectance = 0,
+		Quality = "Fast",
+		RenderDistance = 20000,
+		Lit = true,
+		Highlights = false,
+		DynamicLighting = false,
+		DynamicColors = false,
 	}),
+}
+
+-- Lighting for each Ocean preset, in the LightingSnapshot shape ({ Lighting = props, Children =
+-- { { ClassName, Name, Props } } }; colours as { R, G, B } in 0..1). Loaded by the plugin when an
+-- Ocean preset is applied (and copied onto zones). Load never deletes what it doesn't mention.
+local function rgb(r: number, g: number, b: number)
+	return { R = r / 255, G = g / 255, B = b / 255 }
+end
+
+Presets.Lighting = {
+	Island = {
+		Lighting = {
+			Brightness = 2.5,
+			ClockTime = 13.5,
+			GlobalShadows = true,
+			ShadowSoftness = 0.3,
+			ExposureCompensation = 0,
+			Ambient = rgb(90, 100, 110),
+			OutdoorAmbient = rgb(140, 150, 160),
+			FogColor = rgb(190, 205, 220),
+			FogStart = 0,
+			FogEnd = 100000,
+		},
+		Children = {
+			{
+				ClassName = "Atmosphere",
+				Name = "Atmosphere",
+				Props = {
+					Density = 0.28,
+					Offset = 0.2,
+					Haze = 1,
+					Glare = 0.3,
+					Color = rgb(199, 199, 199),
+					Decay = rgb(106, 112, 125),
+				},
+			},
+		},
+	},
+	["Pirate Seas"] = {
+		Lighting = {
+			Brightness = 1.6,
+			ClockTime = 17.4,
+			GlobalShadows = true,
+			ShadowSoftness = 0.5,
+			ExposureCompensation = -0.2,
+			Ambient = rgb(60, 62, 70),
+			OutdoorAmbient = rgb(95, 100, 110),
+			FogColor = rgb(120, 130, 140),
+			FogStart = 0,
+			FogEnd = 30000,
+		},
+		Children = {
+			{
+				ClassName = "Atmosphere",
+				Name = "Atmosphere",
+				Props = {
+					Density = 0.45,
+					Offset = 0.5,
+					Haze = 3,
+					Glare = 0.2,
+					Color = rgb(150, 150, 160),
+					Decay = rgb(70, 75, 90),
+				},
+			},
+		},
+	},
+	["Oil Rig"] = {
+		Lighting = {
+			Brightness = 1.2,
+			ClockTime = 9,
+			GlobalShadows = true,
+			ShadowSoftness = 0.6,
+			ExposureCompensation = -0.3,
+			Ambient = rgb(70, 75, 80),
+			OutdoorAmbient = rgb(110, 115, 120),
+			FogColor = rgb(140, 145, 150),
+			FogStart = 0,
+			FogEnd = 40000,
+		},
+		Children = {
+			{
+				ClassName = "Atmosphere",
+				Name = "Atmosphere",
+				Props = {
+					Density = 0.4,
+					Offset = 0.35,
+					Haze = 2.5,
+					Glare = 0,
+					Color = rgb(160, 165, 170),
+					Decay = rgb(90, 95, 100),
+				},
+			},
+		},
+	},
+	-- long, hard shadows across the walls of water; haze for distance; bloom on the crests
+	["Great Flood"] = {
+		Lighting = {
+			Brightness = 3.5,
+			ClockTime = 16.8,
+			GeographicLatitude = 30,
+			GlobalShadows = true,
+			ShadowSoftness = 0.1,
+			ExposureCompensation = 0.25,
+			EnvironmentSpecularScale = 1,
+			EnvironmentDiffuseScale = 0.6,
+			Ambient = rgb(50, 55, 65),
+			OutdoorAmbient = rgb(100, 108, 120),
+			FogColor = rgb(150, 160, 175),
+			FogStart = 0,
+			FogEnd = 90000,
+		},
+		Children = {
+			{
+				ClassName = "Atmosphere",
+				Name = "Atmosphere",
+				Props = {
+					Density = 0.36,
+					Offset = 0.4,
+					Haze = 2.2,
+					Glare = 0.5,
+					Color = rgb(170, 180, 195),
+					Decay = rgb(95, 105, 125),
+				},
+			},
+			{
+				ClassName = "SunRaysEffect",
+				Name = "SunRays",
+				Props = { Enabled = true, Intensity = 0.18, Spread = 0.7 },
+			},
+			{
+				ClassName = "BloomEffect",
+				Name = "Bloom",
+				Props = { Enabled = true, Intensity = 0.6, Size = 24, Threshold = 1.4 },
+			},
+		},
+	},
+	Blank = { Lighting = {}, Children = {} },
 }
 
 return Presets

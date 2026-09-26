@@ -304,15 +304,38 @@ local function surfaceParts(): { MeshPart }
 	return list
 end
 
+-- WaterMaterial by name: an Enum.Material or a MaterialVariant in MaterialService (returned as the
+-- second value with its base); an unknown name lands on the closest (prefix / substring), else the default.
+local function materialFor(name: string): (Enum.Material, string)
+	local wanted = tostring(name or ""):lower()
+	for _, variant in game:GetService("MaterialService"):GetChildren() do
+		if variant:IsA("MaterialVariant") and variant.Name:lower() == wanted then
+			return variant.BaseMaterial, variant.Name
+		end
+	end
+	local items = Enum.Material:GetEnumItems()
+	for _, item in items do
+		if item.Name:lower() == wanted then
+			return item, ""
+		end
+	end
+	if wanted ~= "" then
+		for _, item in items do
+			if item.Name:lower():sub(1, #wanted) == wanted or item.Name:lower():find(wanted, 1, true) then
+				return item, ""
+			end
+		end
+	end
+	return DEFAULT_MATERIAL, ""
+end
+
 local function applyLook()
 	-- Roblox cannot keep shadows or highlights off a lit part: unlit means Neon, flat colour
-	local material = (Enum.Material :: any)[Settings.Get("WaterMaterial")]
+	local material, variant = materialFor(Settings.Get("WaterMaterial"))
 	local texture = contentFrom(Settings.Get("WaterTexture")) or Content.none
 	for _, base in surfaceParts() do
-		base.Material = if not Settings.Get("Lit")
-			then Enum.Material.Neon
-			elseif typeof(material) == "EnumItem" then material
-			else DEFAULT_MATERIAL
+		base.Material = if not Settings.Get("Lit") then Enum.Material.Neon else material
+		base.MaterialVariant = if Settings.Get("Lit") then variant else ""
 		base.Reflectance = if Settings.Get("Lit") then Settings.Get("Reflectance") else 0
 		base.TextureContent = texture
 		base.Transparency = 0 -- opaque: depth-sorted exactly

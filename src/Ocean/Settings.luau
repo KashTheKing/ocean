@@ -168,7 +168,8 @@ Settings.List = {
 		Name = "WaterMaterial",
 		Default = "SmoothPlastic",
 		Section = "Visuals",
-		Hint = "Any Enum.Material name: SmoothPlastic (flat), Foil (wet glints), Glass, Ice...",
+		Material = true,
+		Hint = "A material name (SmoothPlastic, Foil, Glass, Ice...) or one of the place's MaterialVariants; an unknown name lands on the closest",
 	},
 	{
 		Name = "WaterTexture",
