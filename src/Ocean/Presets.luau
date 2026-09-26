@@ -343,7 +343,39 @@ Presets.Lighting = {
 			},
 		},
 	},
-	Blank = { Lighting = {}, Children = {} },
+	-- a clean noon: nothing left over from another preset (no long shadows, no bloom, no rays)
+	Blank = {
+		Lighting = {
+			Brightness = 2,
+			ClockTime = 14,
+			GlobalShadows = true,
+			ShadowSoftness = 0.5,
+			ExposureCompensation = 0,
+			EnvironmentDiffuseScale = 0,
+			EnvironmentSpecularScale = 0,
+			Ambient = rgb(70, 70, 70),
+			OutdoorAmbient = rgb(128, 128, 128),
+			FogColor = rgb(192, 192, 192),
+			FogStart = 0,
+			FogEnd = 100000,
+		},
+		Children = {
+			{
+				ClassName = "Atmosphere",
+				Name = "Atmosphere",
+				Props = {
+					Density = 0.3,
+					Offset = 0.25,
+					Haze = 0,
+					Glare = 0,
+					Color = rgb(199, 199, 199),
+					Decay = rgb(106, 112, 125),
+				},
+			},
+			{ ClassName = "SunRaysEffect", Name = "SunRays", Props = { Enabled = false } },
+			{ ClassName = "BloomEffect", Name = "Bloom", Props = { Enabled = false } },
+		},
+	},
 }
 
 return Presets
