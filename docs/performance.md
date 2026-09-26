@@ -35,6 +35,10 @@ Ocean presets set sensible values for their look; Island (the default) is the ba
 
 When streaming loads a new area, Roblox rebuilds every skinned mesh it finds. The module keeps its meshes small and few so that rebuild stays at a few tens of milliseconds rather than a stall.
 
+## EditableMesh access
+
+The wave mesh is an `EditableMesh`, which an experience has to allow in its Experience Settings. Without it the module never builds the mesh: the sea is flat at `SeaLevel` for visuals and physics alike (the flat water slab from Placeholders stands in as the surface), and the Output says so once. `Ocean.Waves.MeshAvailable()` reports which case you are in.
+
 ## Client budget
 
 A client can hold only a handful of `EditableMesh` and `EditableImage` objects at once, and the sea uses most of them (four tiles, the static mesh, foam, film and the animated foam image). If a build is refused, the module retries with fewer layers: first without the film, then without foam, then with a single tile, and warns in the Output which level it landed on. Other systems that create EditableMesh or EditableImage objects share that budget with the sea.

@@ -862,10 +862,23 @@ local function buildOnce(token: number)
 	model.Parent = parent
 end
 
+local warnedNoMesh = false
+
 local function build()
 	buildToken += 1
 	local token = buildToken
 
+	if not Waves.MeshAvailable() then
+		-- no wave mesh without EditableMesh access: the flat water slab stays as the sea
+		showPlaceholders()
+		if not warnedNoMesh then
+			warnedNoMesh = true
+			warn(
+				"[Ocean] EditableMesh is not enabled for this experience (Experience Settings): the sea is flat. Enable it for the dynamic sea."
+			)
+		end
+		return
+	end
 	hidePlaceholders()
 	while true do
 		table.clear(pendingMeshes)
@@ -1307,7 +1320,11 @@ function Renderer.Init(into: Instance?)
 	running = true
 	parent = into or workspace.Terrain -- the game's sea lives under Terrain; the preview under the Camera
 	-- with streaming the placeholder slab can arrive after us: hide it whenever it shows up
-	placeholderAdded = CollectionService:GetInstanceAddedSignal(PLACEHOLDER_TAG):Connect(hidePlaceholders)
+	placeholderAdded = CollectionService:GetInstanceAddedSignal(PLACEHOLDER_TAG):Connect(function()
+		if Waves.MeshAvailable() then
+			hidePlaceholders()
+		end
+	end)
 	connection = Settings.OnChanged(function(name)
 		local entry = Settings.Spec[name]
 		if entry and entry.Rebuild then

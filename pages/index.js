@@ -119,23 +119,6 @@ export default function Home() {
 					<Shot src="/img/showcase-golden-hour.jpg" caption="Classic look, Golden Hour lighting" />
 				</section>
 				<section className={styles.cta}>
-					<h2>Ready to build your sea?</h2>
-					<p>
-						Pick the No Scripting Guide to have the plugin do it all, or the Advanced Guide to drive the sea from code.
-					</p>
-					<div className={styles.buttons}>
-						<Link className="button button--primary button--lg" to="/docs/intro">
-							Get started
-						</Link>
-						<Link
-							className="button button--outline button--lg"
-							href="https://create.roblox.com/store/asset/76752250508724/Infinite-Ocean"
-						>
-							Get the plugin
-						</Link>
-					</div>
-				</section>
-				<section className={styles.cta}>
 					<h2>Made by KashTheKing</h2>
 					<p>
 						Support, bug reports and feedback: <strong>@KashTheKing</strong> on Roblox, Discord, YouTube and X.

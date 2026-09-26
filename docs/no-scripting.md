@@ -5,49 +5,54 @@ title: No Scripting Guide
 
 # No Scripting Guide
 
-Two things: install the plugin, then let the Quick Start build your sea. Nothing is typed, and the whole thing takes about two minutes.
+Everything here happens in the plugin panel. No scripts, no attributes typed by hand.
 
-## 1. Install the plugin
+## 1. Install
 
-1. Get [**Infinite Ocean**](https://create.roblox.com/store/asset/76752250508724/Infinite-Ocean) from the Creator Store.
-2. In Studio, open the **Plugins** tab, press **Manage Plugins** and make sure Infinite Ocean is enabled.
-3. Press the **Infinite Ocean** button in the Plugins toolbar to open the panel. The first time, read and accept the licence agreement.
+1. Get [**Infinite Ocean**](https://create.roblox.com/store/asset/76752250508724/Infinite-Ocean) from the Creator Store and enable it in Studio's Plugins tab.
+2. Open the panel and accept the licence agreement.
+3. Press **Dynamic Ocean**. The Quick Start walks you through the rest. If the panel says EditableMesh is not enabled, either turn it on in the experience's settings and press Dynamic Ocean again, or press **Continue** to use a Flat Ocean.
 
-![The panel before anything is installed](./img/ui-main.png)
+![Quick Start step 1](./img/ui-quickstart-1.png)
 
-## 2. Run the Quick Start
+## 2. Pick a physics, a look and your addons
 
-With no ocean in the place, the panel opens on the **Quick Start**. Press **Dynamic Ocean** (or **Flat Ocean** for a still, flat sea). It installs the module and then asks three questions.
+- **Physics**: Calm (the defaults), Rough, Huge, Tsunami or Still. Pressing one applies it and moves on.
+- **Look**: Classic, Cartoony, Stylized or Realistic.
+- **Addons**: install what you need. For most games that is **Buoyancy** (things float), **Swimming** (players swim) and **Drowning** if you want breath to matter. **DevTools** gives you a debug panel in playtests.
+- **Finish** starts the Edit-mode preview: the sea appears around the camera. It is not saved into the place and Team Create teammates never see it.
 
-![Quick Start step 1: pick the physics](./img/ui-quickstart-1.png)
+## 3. Choose an ocean preset
 
-**Pick the physics.** Calm is a gentle swell (the default), Rough is choppy, Huge is a long open-ocean swell, Tsunami is one wall of water, Still has no motion. Pressing one applies it and moves on. Not sure? Press **Calm**.
+Open **Presets** and press one of the Ocean presets. Each sets the waves, the look, and the place's Lighting and Atmosphere in one go: Island, Pirate Seas, Oil Rig, Great Flood or Blank. They are starting points; everything they set is a slider you can move afterwards.
 
-![Quick Start step 2: pick the look](./img/ui-quickstart-2.png)
+![Presets](./img/ui-main.png)
 
-**Pick the look.** Classic is like Roblox water, Cartoony is matte and flat, Stylized is bright bands with solid foam, Realistic is reflective and detailed. Not sure? Press **Classic**.
+## 4. Make the sea respect your map
 
-![Quick Start step 3: pick the addons](./img/ui-quickstart-3.png)
+Open **Tags**, select something in the workspace, and press **Tag selection** under the tag you want:
 
-**Pick the addons.** Tick what your game needs and press **Next**. For most games that is:
+| Want | Tag |
+|---|---|
+| Waves calm down around an island, pier or breakwater | `OceanObstacle` |
+| A boat that floats and rocks | `OceanFloat` on its hull (or **Make hull for selected boat**) |
+| A submarine interior or underwater room with no water inside | `OceanDry` |
+| A bay with its own calmer, differently coloured sea | Install the Zones addon and press **+ New zone** |
 
-- **Buoyancy**: anything tagged `OceanFloat` floats and rocks on the waves.
-- **Swimming**: characters swim when they walk into the water.
-- **DevTools**: a debug panel in playtests (press **F8** or type `/ocean` in chat).
+![Tags](./img/ui-tags.png)
 
-Drowning, WaterSplash, Weather (rain, lightning, thunder) and Zones are there too. You can add or remove any addon later from **More > Addons**.
+## 5. Tune it
 
-![Quick Start step 4: what to do next](./img/ui-quickstart-4.png)
+- **Physics > General Physics**: sea level, flat sea, seafloor height.
+- **Physics > Wave Physics**: overall wave size and speed, then each of the six waves.
+- **Appearance > Visuals**: colours, foam, film, underwater tint, material and textures.
+- **Appearance > Lighting and Atmosphere**: one-click lighting looks and your own saved ones.
+- **Appearance > Performance**: quality tier, update rate and mesh size, with live stats.
 
-**Finish.** The Edit-mode preview starts and the sea appears around the camera. It is drawn under the camera, not in the workspace, so nothing extra is saved into the place and Team Create teammates never see it. **Stop Edit-mode preview** at the top of the panel turns it off.
+Every control has a hint under it and a tooltip. **Save current** in any Presets section keeps what you made.
 
-## 3. Press Play
+## 6. Test
 
-That is a working sea. Press **Play**: the water moves, characters swim if you installed Swimming, and anything you tag `OceanFloat` floats. Everything the Quick Start chose is a slider in the panel, and every slider has a hint under it.
+Press Play. With DevTools installed, press **F8** or type `/ocean` in chat to open the debug panel: change any setting live, switch weather, spawn crates and rafts, watch water events.
 
-## Where next
-
-- **Change the whole sea in one press**: open **Presets** and try Island, Pirate Seas, Oil Rig, Great Flood or Blank. Each also sets Lighting and Atmosphere. See [Presets](./presets.md).
-- **Make the water respect your map**: the [tutorial](./tutorial.md) adds an island the waves calm around, a boat that floats and a storm, all from the panel.
-- **Every panel section explained**: the [plugin guide](./plugin.md).
-- **Storms on a timer, or a script that asks where the surface is**: the [Advanced Guide](./advanced.md).
+That is the whole loop. When you want a storm to roll in on a timer, or a script to ask where the surface is, move on to the [Advanced Guide](./advanced.md).

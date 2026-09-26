@@ -10,6 +10,7 @@
 	(cross-fading at their rims) + the global weather for whatever weight is left, and each of those
 	is two layers while it is transitioning.
 ]]
+local AssetService = game:GetService("AssetService")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
@@ -113,7 +114,25 @@ local function buildSet(name: string): Set
 	return set
 end
 
-local flat = false -- FlatSea: no displacement anywhere, the surface is SeaLevel
+-- The dynamic sea is an EditableMesh, which an experience has to allow (Experience Settings).
+-- Without it there is no wave mesh, so the sea is flat for everyone: visuals and physics alike.
+local meshAccess: boolean? = nil
+--[=[
+	@within Waves
+	Whether this experience may create EditableMeshes. When it may not, the sea falls back to a
+	flat surface at `SeaLevel` (as if `FlatSea` were on) and the wave mesh is never built.
+	@return boolean
+]=]
+function Waves.MeshAvailable(): boolean
+	if meshAccess == nil then
+		meshAccess = pcall(function()
+			AssetService:CreateEditableMesh():Destroy()
+		end)
+	end
+	return meshAccess :: boolean
+end
+
+local flat = false -- FlatSea (or no EditableMesh access): no displacement anywhere, the surface is SeaLevel
 local frozen = false -- StaticWaves: the wave clock holds, so the surface never moves
 
 --[=[
@@ -123,7 +142,7 @@ local frozen = false -- StaticWaves: the wave clock holds, so the surface never 
 ]=]
 function Waves.Refresh()
 	Weather.Decode()
-	flat = Settings.Get("FlatSea") == true
+	flat = Settings.Get("FlatSea") == true or not Waves.MeshAvailable()
 	frozen = Settings.Get("StaticWaves") == true
 	table.clear(Waves.Sets)
 	Waves.MaxLength = 1
